@@ -1,1 +1,9 @@
-theme: jekyll-theme-cayman
+theme: jekyll-theme-primer
+title: Epsilon Greedy Quants
+description: Allocation between quantitative strategies is a problem of interest to any portfolio manager that leverages quantitative strategies.
+baseurl:
+markdown: kramdown
+kramdown:
+  math_engine: mathjax
+  input: GFM
+  syntax_highlighter: rouge
