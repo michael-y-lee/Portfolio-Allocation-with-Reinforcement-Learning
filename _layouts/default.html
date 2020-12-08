@@ -29,6 +29,7 @@
     <br />Michael Lee - Nikat Patel - Jose Antonio Alatorre Sanchez
     </p>
     <div class="container-lg px-3 my-5 markdown-body">
+      <p align="center">
       <nav class="group">
         <a href="{{ "/" | absolute_url }}">Introduction</a>
         {% assign navigation_pages = site.html_pages | sort: 'nav_include' %}
@@ -42,6 +43,7 @@
                 {% endif %}
         {% endfor %}
         </nav>
+      </p>
 
       <h1>{{page.title}}</h1>
 
