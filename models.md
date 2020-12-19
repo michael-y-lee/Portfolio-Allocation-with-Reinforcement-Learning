@@ -50,6 +50,46 @@ The baseline can be any function, including a random variable as long as it does
 <img src="https://render.githubusercontent.com/render/math?math=\theta_t%2B1=\theta%2B\alpha(G_t-b(S_t))\frac{\nabla\pi(a|S_t,\theta)}{\pi(a|S_t,\theta)}">
 
 ### Actor-Critic Methods
+
+In REINFORCE with baseline, the learned state-value function estimates the value of only the first state of each state transition. This estimate sets a baseline for the subsequent return, but is made prior to the transition’s action and thus cannot be used to assess that action. In actor-critic methods, on the other hand, the state-value function is applied also to the second state of the transition. The estimated value of the second state, when discounted and added to the reward, constitutes the one-step return, ***G*<sub>*t* : *t* + 1</sub>** which is a useful estimate of the actual return and thus is a way of assessing the action.
+
+When the state-value function is used to assess actions in this way it is called a critic, and the overall policy-gradient method is termed an actor-critic method. Note that the bias in the gradient estimate is not due to bootstrapping as such; the actor would be biased even if the critic was learned by a Monte Carlo method.
+
+![Figure 2](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/actor_critic.png "From Deep Reinforcement Learning Hands-On (Lapan, 2018)")
+
+The Actor-Critic Methods which we tested are the following:
+
 ### One Step Actor-Critic
+
+One-step actor–critic methods replace the full return with the one-step return (and use a learned state-value function as the baseline) as follows:
+
+<img src="https://render.githubusercontent.com/render/math?math=\theta_{t%2B1}=\theta_t %2B \alpha(G_{t:t%2B1}-\hat{\nu}(S_t,{w})\frac{\nabla\pi(A_t|S_t,\theta)}{\pi(A_t|S_t,\theta)}">
+
+<img src="https://render.githubusercontent.com/render/math?math=\theta_{t%2B1}=\theta_t %2B \alpha(R_{t+1}\gamma\hat{\nu}(S_{t%2B1},{w})-\hat{\nu}(S_t,{w})\frac{\nabla\pi(A_t|S_t,\theta)}{\pi(A_t|S_t,\theta)}">
+
+As Sutton and Barto (2018) notes, one of the advantages of one-step methods is that they are fully online and incremental, but they avoid the complexities of eligibility traces since they are a special case of the eligibility trace methods that is easier to understand.  Pseudocode for one-step actor-critic is listed in Figure below:
+
+![Figure 3](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/ac_1_step.png "One-Step Actor-Critic Pseudocode (Sutton and Barto, 2018)")
+
 ### Actor-Critic with Eligibility Traces
+
+The forward view of n-step methods can be generalized by replacing the one-step return with ***G*<sub>*t* : *t* + *n*</sub>** and the forward view of a ***λ***-return algorithm is replaced by ***G*<sub>*t*</sub><sup>*λ*</sup>**. The backward view of the ***λ***-return algorithm uses separate eligibility traces for the actor and critic. Pseudocode for the complete algorithm is given in Figure below. 
+
+![Figure 4](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/ac_l_return.png "Actor-Critic with Eligibility Traces pseudocode (Sutton and Barto, 2018)")
+
 ### Policy Parameterization
+
+So far we have discussed PG Methods that depend on a parameterization of the action space. For our particular case, we need a continuous parameterization. Our baseline parameterization will be a multivariate Gaussian policy defined as:
+
+<img src="https://render.githubusercontent.com/render/math?math=\pi(a|s,\theta)=\frac{exp[-\frac{1}{2}(a-\mu(s,\theta))^T\Sigma^{-1}_{(s,\theta)}(a-\mu(s,\theta))]}{\sqrt{2\pi^k|\Sigma_{(s,\theta)}|}}">
+
+Where ***k*** is the number of assets in the portfolio.
+
+For the parameterization of the mean and variance, we will try several approaches. First, we will use a linear parameterization where the feature space ***x(s)*** will be the same realized volatilites that we are using to build an Equal Risk Contribution (ERC) portfolio. The reason for choosing this initial parameterization is to have a sensitivity of how the algorithm performs when it gets the same information as the benchmark. 
+
+<img src="https://render.githubusercontent.com/render/math?math=\mu(s,\theta)=\theta_\mu^Tx(s)">
+
+<img src="https://render.githubusercontent.com/render/math?math=\sigma_{i,j}(s,\theta)=\theta_\sigma_{i,j}^Tx(s)">
+
+
+
