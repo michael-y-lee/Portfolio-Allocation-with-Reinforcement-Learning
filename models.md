@@ -32,14 +32,23 @@ We could stop here and instantiate our stochastic gradient-ascent algorithm wher
 <img src="https://render.githubusercontent.com/render/math?math==E_\pi[G_t\frac{\nabla\pi(a|S_t,\theta)}{\pi(a|S_t,\theta)}]">
 
 
-Where we replaced *a* by a sample *A*<sub>*t*</sub>.
+Where we replaced **a** by a sample ***A*<sub>*t*</sub>**.
 
 The final expression in brackets is exactly what is needed, a quantity that can be sampled on each time step whose expectation is equal to the gradient. Using this sample to instantiate our generic stochastic gradient ascent algorithm yields the REINFORCE update:
 
-
+<img src="https://render.githubusercontent.com/render/math?math=\theta_{t%2B1}=\theta_t%2B\alpha G_t\frac{\nabla\pi(a|S_t,\theta)}{\pi(a|S_t,\theta)}">
 
 
 ### REINFORCE with Baseline
+
+As a stochastic gradient method, REINFORCE has good theoretical convergence properties. By construction, the expected update over an episode is in the same direction as the performance gradient. This assures an improvement in expected performance for sufficiently small **α**, and convergence to a local optimum under standard stochastic approximation conditions for decreasing **α**. However, as a Monte Carlo method, REINFORCE may be of high variance and thus produce slow learning. To improve REINFORCE, the addition of a baseline function can help speed the convergence of the algorithm. The Policy Gradient theorem (Sutton and Barto, Equation 13.5) can be generalized to include a comparison of the action value to an arbitrary baseline ***b*(*s*)**:
+
+<img src="https://render.githubusercontent.com/render/math?math=\nabla J(\theta)\propto \sum_s\mu(s)\sum_a(q_\pi(s,a)-b(s))\nabla \pi(a|s,\theta)">
+
+The baseline can be any function, including a random variable as long as it does not vary with ***a***. One natural choice for the baseline is an estimate of the state value ***v̂*(*S*<sub>*t*</sub>, *w*)**; with this baseline the update rule in the gradient ascent will be:
+
+<img src="https://render.githubusercontent.com/render/math?math=\theta_t%2B1=\theta%2B\alpha(G_t-b(S_t))\frac{\nabla\pi(a|S_t,\theta)}{\pi(a|S_t,\theta)}">
+
 ### Actor-Critic Methods
 ### One Step Actor-Critic
 ### Actor-Critic with Eligibility Traces
