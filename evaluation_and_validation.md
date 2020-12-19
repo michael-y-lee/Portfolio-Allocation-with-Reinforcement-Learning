@@ -6,7 +6,7 @@ nav_include: 4
 
 ## Overview
 
-Each policy will be compared with several benchmark portfolios constructed using traditional portfolio optimization techniques.  The portfolio benchmarks that we will use are: mean-variance optimization, equal risk contribution and hierarchical risk parity. [1] 
+Each policy will be compared with several benchmark portfolios constructed using traditional portfolio optimization techniques.  The portfolio benchmarks that we will use are: mean-variance optimization, equal risk contribution and hierarchical risk parity. [4] 
 
 ### Performance Metrics
 
@@ -69,4 +69,4 @@ To estimate the performance of our reinforcement learning algorithms, we will cr
 We begin by dividing the Real Dataset ETF Price History's into two datasets, the training set which includes ETF price history from January 2017 to March 2020, and a test dataset with ETF price history from April 2020 to November 2020.
 
 
-[1] We will use the public library PyPortfolioOpt. More details can be found in here https://pyportfolioopt.readthedocs.io/en/latest/
+[4] We will use the public library PyPortfolioOpt. More details can be found in here https://pyportfolioopt.readthedocs.io/en/latest/
