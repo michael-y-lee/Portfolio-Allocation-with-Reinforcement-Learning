@@ -32,43 +32,18 @@ Below we present the average weights per epoch at different levels of risk avers
 
 #### Models Convergence
 
-REINFORCE ***λ=0***
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/model_convergence_1.png)
 
-![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/reinforce_l_0.png "REINFORCE \lambda=0")
+![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/model_convergence_2.png)
 
-REINFORCE ***λ=1e5***
-
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/reinforce_l_inf.png "REINFORCE \lambda=1e5")
-
-REINFORCE with Baseline ***λ=0***
-
-![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/reinforce_baseline_max_return_sim.png "REINFORCE with Baseline \lambda=0")
-
-REINFORCE with Baseline ***λ=1e5***
-
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/reinforce_baseline_min_var_sim.png "REINFORCE with Baseline \lambda=1e5")
-
-Actor Critic ***λ=0***
-
-![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/ac_l_0.png "Actor Critic \lambda=0")
-
-Actor Critic ***λ=1e5***
-
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/ac_l_inf.png "Actor Critic \lambda=1e5")
-
-Soft Actor Critic ***λ=0***
-
-![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/sac_max_ret.png "Soft Actor Critic \lambda=0")
-
-Soft Actor Critic ***λ=1e5***
-
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/sac_min_var.png "Soft Actor Critic \lambda=1e5")
 
 
 
 ## Real Dataset
 
+Now that we have successfully demonstrated the operation of the PQM algorithms with our control dataset, we then test four of the PQM algorithms on real-world data: REINFORCE, REINFORCE with Baseline, Actor-Critic, and Actor-Critic with Eligibility traces. 
 
+We begin by dividing the ETF price history into two datasets, the training set which includes ETF price history from January 2017 to March 2020, and a test dataset with ETF price history from April 2020 to November 2020. The series are de-meaned and we run two cases at different levels of risk aversion ***λ***, 0 and 10. In Figures 13-16, we see that with a risk aversion ***λ***=0, we did not reach convergence in any of the PG Methods. This is further evidenced by having a relatively equal asset weight distribution as seen in Figures 17-20. 
 
 
 
