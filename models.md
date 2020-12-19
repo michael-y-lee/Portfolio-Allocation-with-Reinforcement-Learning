@@ -27,15 +27,15 @@ We could stop here and instantiate our stochastic gradient-ascent algorithm wher
 
 <img src="https://render.githubusercontent.com/render/math?math=\nabla J(\theta)=E_\pi[\sum_a \pi(a|S_t,\theta)q_\pi(S_t,a)\frac{\nabla\pi(a|S_t,\theta)}{\pi(a|S_t,\theta)}]">
 
-<img src="https://render.githubusercontent.com/render/math?math= = E_\pi[q_\pi(S_t,A_t)\frac{\nabla\pi(a|S_t,\theta)}{\pi(a|S_t,\theta)}]">
+<img src="https://render.githubusercontent.com/render/math?math==E_\pi[q_\pi(S_t,A_t)\frac{\nabla\pi(a|S_t,\theta)}{\pi(a|S_t,\theta)}]">
 
-<img src="https://render.githubusercontent.com/render/math?math= = E_\pi[G_t\frac{\nabla\pi(a|S_t,\theta)}{\pi(a|S_t,\theta)}]]">
+<img src="https://render.githubusercontent.com/render/math?math==E_\pi[G_t\frac{\nabla\pi(a|S_t,\theta)}{\pi(a|S_t,\theta)}]">
+
 
 Where we replaced *a* by a sample *A*<sub>*t*</sub>.
 
 The final expression in brackets is exactly what is needed, a quantity that can be sampled on each time step whose expectation is equal to the gradient. Using this sample to instantiate our generic stochastic gradient ascent algorithm yields the REINFORCE update:
 
-<img src="https://render.githubusercontent.com/render/math?math= \theta_{t+1}=\theta_t+\alpha G_t\frac{\nabla\pi(a|S_t,\theta)}{\pi(a|S_t,\theta)}">
 
 
 
