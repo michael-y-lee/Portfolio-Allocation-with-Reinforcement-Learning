@@ -1,7 +1,7 @@
 ---
 title: User Guide
 notebook:
-nav_include: 8
+nav_include: 7
 ---
 
 ## User Guide
