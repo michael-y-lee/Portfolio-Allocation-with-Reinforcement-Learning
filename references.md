@@ -1,7 +1,7 @@
 ---
 title: References
 notebook:
-nav_include: 9
+nav_include: 8
 ---
 
 ## References
