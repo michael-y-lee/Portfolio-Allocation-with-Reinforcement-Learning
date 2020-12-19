@@ -37,14 +37,33 @@ Below we present the average weights per epoch at different levels of risk avers
 ![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/model_convergence_2.png)
 
 
-
-
 ## Real Dataset
 
 Now that we have successfully demonstrated the operation of the PQM algorithms with our control dataset, we then test four of the PQM algorithms on real-world data: REINFORCE, REINFORCE with Baseline, Actor-Critic, and Actor-Critic with Eligibility traces. 
 
 We begin by dividing the ETF price history into two datasets, the training set which includes ETF price history from January 2017 to March 2020, and a test dataset with ETF price history from April 2020 to November 2020. The series are de-meaned and we run two cases at different levels of risk aversion ***λ***, 0 and 10. In Figures 13-16, we see that with a risk aversion ***λ***=0, we did not reach convergence in any of the PG Methods. This is further evidenced by having a relatively equal asset weight distribution as seen in Figures 17-20. 
 
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk0_rewards.png)
+
+![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk0_weights.png)
+
+Using the policies obtained in the Policy Gradient Methods training, we perform a backtest on each of the PG Methods using the test set data and compare the backtest against the benchmark return.  The benchmark return is obtained using PyPortfolioOpt's mean-variance optimization with hierarchical risk parity weights.  Figure 21 shows that all four PG methods have backtest returns which are similar to each other.  The backtest returns appear to be similar in behavior to the benchmark return, but at a lower magnitude of return.
+
+![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/plot_backtest_0.png)
+
+In Figures 22-25, we run each of the Policy Gradient Methods using a risk aversion ***λ*** parameter of 10 for 10,000 epochs and note that the the PGM models do not converge in these cases as well. Figures 26-29 show that in each of the PGM models, the distribution appears to be fairly equal amongst all assets in the portfolio. 
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk10_rewards.png)
+
+![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk10_weights1.png)
+![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk10_weights2.png)
+
+In Figure 30, we compare the backtest returns for each of the PG Methods when ***λ***=10 to the benchmark return and observe that the backtest returns are similar to the results when ***λ***=0; they have a lower magnitude of return as compared to the benchmark return. 
+
+![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/plot_backtest_10.png)
+
+
+## Statistics
 
 
 
