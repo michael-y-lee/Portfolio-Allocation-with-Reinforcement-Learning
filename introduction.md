@@ -20,6 +20,6 @@ For this project, we will narrow portfolio construction of quantitative strategi
 
 The reality is that Smart Beta strategies represent a correlation with other risk factors, which in many cases are not taken into account when the financial strategy is constructed. Therefore, having a “full” machine learning algorithm for portfolio construction of Smart Beta strategies will bring an immediate benefit to the investor community by providing a better allocation between Smart Beta strategies under different market scenarios. For the purpose of this project, a “full” machine learning algorithm combines the trading signals with the portfolio allocation.
 
-[1] As of 2018, 91 percent of asset owners have a Smart Beta strategy in their portfolios. Source: https://www.investopedia.com/news/survey-confirms-smart-beta-growth-trajectory/ 
+[1] As of 2018, 91 percent of asset owners have a Smart Beta strategy in their portfolios. Source: <https://www.investopedia.com/news/survey-confirms-smart-beta-growth-trajectory/>
 
 
