@@ -4,8 +4,6 @@ notebook:
 nav_include: 7
 ---
 
-# User Guide for Real-World Data
-
 This is a user guide for how to load real-world data into our model and how to perform Policy-Gradient Methods such as REINFORCE, REINFORCE with Baseline, Actor-Critic, and Actor-Critic with Eligibility Traces.
 
 
