@@ -6,7 +6,7 @@ nav_include: 3
 
 ## Overview
 
-As mentioned in the introduction, the objective of the capstone is to build a full machine learning model portfolio of quantitative strategies. To achieve this task we will use Reinforcement Learning, and within Reinforcement Learning we will use Policy Gradient Methods. Policy Gradient Methods focus on estimating directly the Policy **π**(**a**\|**s**) rather than the action value function, usually referred in Reinforcement Learning as **Q**(**s**, **a**). An advantage of Policy Gradient methods is that it only requires that the policy be parametric in any way as long as **π**(**a**\|**s**, **θ**) is differential with respect to its parameters. This is an interesting feature as it is not making any restriction on the action or state space. In our case, this is a necessary condition given that we want a full machine learning approach and our action space consists of all the possible combinations of weights **w** in a portfolio. This is a continuous infinite space which can’t be directly estimated using Action-Value methods.
+As mentioned in the introduction, the objective of the capstone is to build a full machine learning model portfolio of quantitative strategies. To achieve this task we will use Reinforcement Learning, and within Reinforcement Learning we will use Policy Gradient Methods. Policy Gradient Methods focus on estimating directly the Policy **π**(**a**\|**s**) rather than the action value function, usually referred in Reinforcement Learning as **Q**(**s**, **a**). An advantage of Policy Gradient Methods is that it only requires that the policy be parametric in any way as long as **π**(**a**\|**s**, **θ**) is differential with respect to its parameters. This is an interesting feature as it is not making any restriction on the action or state space. In our case, this is a necessary condition given that we want a full machine learning approach and our action space consists of all the possible combinations of weights **w** in a portfolio. This is a continuous infinite space which can’t be directly estimated using Action-Value Methods.
 
 ## Policy Gradient Methods
 
@@ -14,7 +14,7 @@ The Policy Gradient Methods that we will explore in this capstone work by defini
 
 <img src="https://render.githubusercontent.com/render/math?math=\nabla J(\theta)\propto \sum_s\mu(s)\sum_aq_\pi(s,a)\nabla \pi(a|s,\theta)">
 
-Several algorithms can be used to solve this problem. For this capstone project, we will explore three different Policy Gradient methods: REINFORCE, REINFORCE with Baseline, and Actor-Critic Methods.
+Several algorithms can be used to solve this problem. For this capstone project, we will explore three different Policy Gradient Methods: REINFORCE, REINFORCE with Baseline, and Actor-Critic Methods.
 
 ### REINFORCE
 
