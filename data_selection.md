@@ -44,11 +44,11 @@ We choose this set of ETFs to have a well known, investable set of simple system
 
 ### Real-World Data Input to Model
 
-In terms of data requirements for our model, the assets used for our model should consist of daily time bars of closing price and all assets should have the same start and end time range.  This data should saved as a separate parquet file for each asset and stored in the \verb!data_env! directory in our repo. When preparing our data, the time series are de-meaned. We built a class method called 
+In terms of data requirements for our model, the assets used for our model should consist of daily time bars of closing price and all assets should have the same start and end time range.  This data should saved as a separate parquet file for each asset and stored in the data_env directory in our repo. When preparing our data, the time series are de-meaned. We built a class method called 
 
 > build_environment_from_dirs_and_transform
 
-to load the asset price data from the \verb!data_env! directory into our environment and persist data transformations for further training.  Please refer to our User Guide for more details of the data requirements and an example of how the real-world data is loaded into our models.
+to load the asset price data from the data_env directory into our environment and persist data transformations for further training.  Please refer to our User Guide for more details of the data requirements and an example of how the real-world data is loaded into our models.
 
 
 [2] Data provided by barchart.com <https://barchart.com>
