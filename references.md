@@ -6,7 +6,7 @@ nav_include: 8
 
 Cumming, James. An investigation into the use of reinforcement learning techniques within the algorithmic trading domain. Master’s thesis, Imperial College London, United Kingdom, 2015. <http://www.doc.ic.ac.uk/teaching/distinguished-projects/2015/j.cumming.pdf> 
 
-Dempster, M.A.H. and Leemans, V. An automated fx trading system using adaptive reinforcement learning. Expert Systems with Applications, 30(3):543 – 552, 2006. ISSN 0957-4174. doi: http://dx.doi.org/10.1016/j.eswa.2005.10.012. <http://www.sciencedirect.com/science/article/pii/S0957417405003015>. Intelligent Information Systems for Financial Engineering. 
+Dempster, M.A.H. and Leemans, V. An automated fx trading system using adaptive reinforcement learning. Expert Systems with Applications, 30(3):543 – 552, 2006. ISSN 0957-4174. doi: <https://dx.doi.org/10.1016/j.eswa.2005.10.012> <http://www.sciencedirect.com/science/article/pii/S0957417405003015>. Intelligent Information Systems for Financial Engineering. 
 
 Deng, Y., Bao, F. Kong, Y, Ren, Z. and Dai, Q Deep direct reinforcement learning for financial signal representation and trading. IEEE transactions on neural networks and learning systems, 28(3):653–664, 2017. 
 
