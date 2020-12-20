@@ -34,7 +34,7 @@ We divided the real data set in two sub-sets[1]. One set will be use to select f
 - iShares MSCI EM Minimum Volatility (**EEMV**)
 - iShares MSCI EAFE Minimum Volatility (**EFAV**)
 
-We choose this set of ETFs to have a well known, investable set of simple systematic strategies. This set contains all the factor strategies (value, size, momentum, volatility) from iShares[3] with more than 5 years of daily data. The second subset contains the assets that we will use only to extract features:
+We choose this set of ETFs to have a well known, investable set of simple systematic strategies. This set contains all the factor strategies (value, size, momentum, volatility) from iShares[2] with more than 5 years of daily data. The second subset contains the assets that we will use only to extract features:
 
 - iShares 7-10 years US Treasuries (**IEF**)
 - iShares Gold Trust (**IAU**)
