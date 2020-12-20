@@ -10,7 +10,9 @@ Dempster, M.A.H. and Leemans, V. An automated fx trading system using adaptive r
 
 Deng, Y., Bao, F. Kong, Y, Ren, Z. and Dai, Q Deep direct reinforcement learning for financial signal representation and trading. IEEE transactions on neural networks and learning systems, 28(3):653–664, 2017. 
 
-Honchar, Alexandr. "AI for portfolio management: from Markowitz to Reinforcement Learning." Medium: The Startup. 28 Sep 2019. <https://medium.com/swlh/ai-for-portfolio-management-from-markowitz-to-reinforcement-learning-cffedcbba566> Forseth, Erik and Tricker, Ed. “Equal Risk Contribution Portfolios,” Graham Capital Management, March 2019. 
+Honchar, Alexandr. "AI for portfolio management: from Markowitz to Reinforcement Learning." Medium: The Startup. 28 Sep 2019. <https://medium.com/swlh/ai-for-portfolio-management-from-markowitz-to-reinforcement-learning-cffedcbba566> 
+
+Forseth, Erik and Tricker, Ed. “Equal Risk Contribution Portfolios,” Graham Capital Management, March 2019. 
 
 Lapan, Maxim. Deep Reinforcement Learning Hands-on: Apply Modern RL Methods, with Deep Q-Networks, Value Iteration, Policy Gradients, TRPO, AlphaGo Zero and More. Packt Publishing, 2018. 
 
