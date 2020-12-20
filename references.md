@@ -18,6 +18,6 @@ Market data APIs. Barchart.com \| Commodity, Stock, and Currency Quotes, Charts,
 
 Moody, J. and Saffell, M. Learning to trade via direct reinforcement. IEEE Transactions on Neural Networks, 12(4):875–889, Jul 2001. ISSN 1045-9227. doi: 10.1109/72.935097. 
 
-Shriber, Todd. “Survey Confirms Smart Beta Growth Trajectory.” Investopedia, Investopedia, 29 Jan. 2020. [www.investopedia.com/news/survey-confirms-smart-beta-growth-trajectory]
+Shriber, Todd. “Survey Confirms Smart Beta Growth Trajectory.” Investopedia, Investopedia, 29 Jan. 2020. <www.investopedia.com/news/survey-confirms-smart-beta-growth-trajectory>
 
 Sutton, Richard S., and Andrew G. Barto. Reinforcement Learning: an Introduction. The MIT Press, 2018. <http://incompleteideas.net/book/the-book.html> 
