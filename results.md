@@ -43,9 +43,9 @@ Now that we have successfully demonstrated the operation of the PQM algorithms w
 
 We begin by dividing the ETF price history into two datasets, the training set which includes ETF price history from January 2017 to March 2020, and a test dataset with ETF price history from April 2020 to November 2020. The series are de-meaned and we run two cases at different levels of risk aversion ***λ***, 0 and 10. In Figures 13-16, we see that with a risk aversion ***λ***=0, we did not reach convergence in any of the PG Methods. This is further evidenced by having a relatively equal asset weight distribution as seen in Figures 17-20. 
 
-![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk0_rewards.png)
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/rewards_11_12.png)
 
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk0_weights.png)
+![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figures_13_18.png)
 
 Using the policies obtained in the Policy Gradient Methods training, we perform a backtest on each of the PG Methods using the test set data and compare the backtest against the benchmark return.  The benchmark return is obtained using PyPortfolioOpt's mean-variance optimization with hierarchical risk parity weights.  Figure 21 shows that all four PG Methods have backtest returns which are similar to each other.  The backtest returns appear to be similar in behavior to the benchmark return, but at a lower magnitude of return.
 
