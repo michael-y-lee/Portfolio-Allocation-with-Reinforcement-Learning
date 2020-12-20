@@ -14,7 +14,6 @@ import datetime
 import numpy as np
 import pandas as pd
 import os
-from utils import train_val_test
 from pypfopt.efficient_frontier import EfficientFrontier
 from pypfopt.plotting import plot_efficient_frontier
 from pypfopt.cla import CLA
