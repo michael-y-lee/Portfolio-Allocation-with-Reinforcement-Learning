@@ -725,7 +725,6 @@ backtest_risk_0_stats
     </tr>
   </tbody>
 </table>
-</div>
 
 
 
@@ -783,5 +782,4 @@ backtest_risk_10_stats
     </tr>
   </tbody>
 </table>
-</div>
 
