@@ -7,3 +7,4 @@ kramdown:
   math_engine: mathjax
   input: GFM
   syntax_highlighter: rouge
+exclude: ['./README.md', 'README.md']
