@@ -6,7 +6,7 @@ nav_include: 7
 
 ### Installation Requirements
 
-The complete list of libraries used for the project can be found in the file requirements.txt in the repository. While most of the libraries are standard and can be installed directly through pip
+The complete list of libraries used for the project can be found in the file requirements.txt[1] in the repository. While most of the libraries are standard and can be installed directly through pip
 
 ```python
 pip install -r requirements.txt
@@ -16,7 +16,7 @@ There are a few that require special care. Below are further details on their in
 
 1.  Pytorch : Use the OS matrix described here: <https://pytorch.org/get-started/locally/>
 
-2.  Spinnig Up : Needs to be built from source, complete details can be found here: <https://spinningup.openai.com/en/latest/user/installation.html>
+2.  Spinning Up : Needs to be built from source, complete details can be found here: <https://spinningup.openai.com/en/latest/user/installation.html>
 
 3.  PyportfolioOpt: Windows users may require extra steps to install cvxopt, details can be found here: <https://pyportfolioopt.readthedocs.io/en/latest/UserGuide.html> and <https://cvxopt.org/install/>
 
@@ -605,3 +605,5 @@ backtest_risk_10, backtest_risk_10_stats = load_backtest_risk_10()
 display_graph(backtest_risk_10, rp_max_return_benchmark, factor='10')
 
 ```
+
+[1] <https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/requirements.txt>
