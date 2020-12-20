@@ -8,7 +8,7 @@ nav_include: 5
 
 We tested all our models on a simulation of a 2-asset environment. The results were consistent across different levels of **μ** and **σ**. Below is an example of the model convergence using a predefined choice of parameters and for each of the previously discussed reward functions 
 
-We tested all our models on a simulated 2-asset environment with a one-step reward defined as follows: on each observation the agent receives a reward ***R_t***. [5]
+We tested all our models on a simulated 2-asset environment with a one-step reward defined as follows: on each observation the agent receives a reward ***R_t***. [1]
 
 <img src="https://render.githubusercontent.com/render/math?math=R_t =  \Delta\Pi_t -\lambda a_t^T\Sigma a_t">
 
@@ -64,7 +64,7 @@ In Figure 28, we compare the backtest returns for each of the PG Methods when **
 
 ## Statistics
 
-Now that we have shown the results of our dataset, we will be evaluating the statistical components of our dataset. The statistical components will be based on the performance metrics described earlier. To generate our statistical components we will be using the public library of QuantStats.[6]
+Now that we have shown the results of our dataset, we will be evaluating the statistical components of our dataset. The statistical components will be based on the performance metrics described earlier. To generate our statistical components we will be using the public library of QuantStats.[2]
 
 
 #### Real World Dataset Statistics
@@ -98,6 +98,6 @@ In the following figures, we can observe the rolling Sharpe Ratios of each respe
 
 
 
-[5] Reward function could also be parametrized as <img src="https://render.githubusercontent.com/render/math?math=R_t = \lambda\Delta\Pi_t -(1-\lambda) a_t^T\Sigma a_t">. In this case caution needs to be taken in scaling the covariance matrix.
+[1] Reward function could also be parametrized as <img src="https://render.githubusercontent.com/render/math?math=R_t = \lambda\Delta\Pi_t -(1-\lambda) a_t^T\Sigma a_t">. In this case caution needs to be taken in scaling the covariance matrix.
 
-[6] QuantStats performs portfolio profiling, which allows portfolio managers to understand their performance better by providing them with in-depth analytics and risk metrics. <https://github.com/ranaroussi/quantstats>
+[2] QuantStats performs portfolio profiling, which allows portfolio managers to understand their performance better by providing them with in-depth analytics and risk metrics. <https://github.com/ranaroussi/quantstats>
