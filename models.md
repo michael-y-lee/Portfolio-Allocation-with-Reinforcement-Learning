@@ -67,13 +67,13 @@ One-step actor–critic methods replace the full return with the one-step return
 
 <img src="https://render.githubusercontent.com/render/math?math=\theta_{t%2B1}=\theta_t %2B \alpha(R_{t+1}\gamma\hat{\nu}(S_{t%2B1},{w})-\hat{\nu}(S_t,{w})\frac{\nabla\pi(A_t|S_t,\theta)}{\pi(A_t|S_t,\theta)}">
 
-As Sutton and Barto (2018) notes, one of the advantages of one-step methods is that they are fully online and incremental, but they avoid the complexities of eligibility traces since they are a special case of the eligibility trace methods that is easier to understand.  Pseudocode for one-step actor-critic is listed in Figure below:
+As Sutton and Barto (2018) notes, one of the advantages of one-step methods is that they are fully online and incremental, but they avoid the complexities of eligibility traces since they are a special case of the eligibility trace methods that is easier to understand.  Pseudocode for one-step actor-critic is listed below [1]:
 
 ![Figure 3](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/ac_1_step.png "One-Step Actor-Critic Pseudocode (Sutton and Barto, 2018)")
 
 ### Actor-Critic with Eligibility Traces
 
-The forward view of n-step methods can be generalized by replacing the one-step return with ***G*<sub>*t* : *t* + *n*</sub>** and the forward view of a ***λ***-return algorithm is replaced by ***G*<sub>*t*</sub><sup>*λ*</sup>**. The backward view of the ***λ***-return algorithm uses separate eligibility traces for the actor and critic. Pseudocode for the complete algorithm is given in Figure below. 
+The forward view of n-step methods can be generalized by replacing the one-step return with ***G*<sub>*t* : *t* + *n*</sub>** and the forward view of a ***λ***-return algorithm is replaced by ***G*<sub>*t*</sub><sup>*λ*</sup>**. The backward view of the ***λ***-return algorithm uses separate eligibility traces for the actor and critic. Pseudocode for actor-critic with eligibility traces is listed below [1]:. 
 
 ![Figure 4](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/ac_l_return.png "Actor-Critic with Eligibility Traces pseudocode (Sutton and Barto, 2018)")
 
@@ -91,5 +91,6 @@ For the parameterization of the mean and variance, we will try several approache
 
 <img src="https://render.githubusercontent.com/render/math?math=\sigma_{i,j}(s,\theta)=\theta_\sigma_{i,j}^Tx(s)">
 
+[1] Sutton, Richard S., and Andrew G. Barto. Reinforcement Learning: an Introduction. The MIT Press, 2018. <http://incompleteideas.net/book/the-book.html> 
 
 
