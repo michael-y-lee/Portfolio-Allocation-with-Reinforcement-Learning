@@ -337,7 +337,6 @@ import pandas as pd
 import talib
 from tqdm import tqdm
 import quantstats as qs
-from PIL import Image  
 qs.extend_pandas()
 %matplotlib inline
 ```
