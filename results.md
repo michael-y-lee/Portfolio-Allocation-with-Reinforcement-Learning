@@ -53,10 +53,9 @@ Using the policies obtained in the Policy Gradient Methods training, we perform 
 
 In Figures 20-23, we run each of the Policy Gradient Methods using a risk aversion ***λ*** parameter of 10 for 10,000 epochs and note that the the PGM models do not converge in these cases as well. Figures 24-27 show that in each of the PGM models, the distribution appears to be fairly equal amongst all assets in the portfolio. 
 
-![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk10_rewards.png)
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figures_20_25.png)
 
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk10_weights1.png)
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk10_weights2.png)
+![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figures_26_27.png)
 
 In Figure 28, we compare the backtest returns for each of the PG Methods when ***λ***=10 to the benchmark return and observe that the backtest returns are similar to the results when ***λ***=0; they have a lower magnitude of return as compared to the benchmark return. 
 
