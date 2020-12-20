@@ -73,7 +73,7 @@ As Sutton and Barto (2018) notes, one of the advantages of one-step methods is t
 
 ### Actor-Critic with Eligibility Traces
 
-The forward view of n-step methods can be generalized by replacing the one-step return with ***G*<sub>*t* : *t* + *n*</sub>** and the forward view of a ***λ***-return algorithm is replaced by ***G*<sub>*t*</sub><sup>*λ*</sup>**. The backward view of the ***λ***-return algorithm uses separate eligibility traces for the actor and critic. Pseudocode for actor-critic with eligibility traces is listed below [1]:. 
+The forward view of n-step methods can be generalized by replacing the one-step return with ***G*<sub>*t* : *t* + *n*</sub>** and the forward view of a ***λ***-return algorithm is replaced by ***G*<sub>*t*</sub><sup>*λ*</sup>**. The backward view of the ***λ***-return algorithm uses separate eligibility traces for the actor and critic. Pseudocode for actor-critic with eligibility traces is listed below [1]:
 
 ![Figure 4](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/ac_l_return.png "Actor-Critic with Eligibility Traces pseudocode (Sutton and Barto, 2018)")
 
