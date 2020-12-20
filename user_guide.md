@@ -302,3 +302,486 @@ linear_agent_actor_critic_trace.ACTOR_CRITIC_FIT(use_traces=True,max_iterations=
 # perform backtest
 backtest_actor_critic_trace = plot_backtest(linear_agent_actor_critic_trace, env_actor_critic_trace_test,  portfolio_df_test, model="Actor-Critic with Eligibility Traces")
 ```
+
+# User Steps for Statistics and Benchmarks
+
+This is a user guide for how to load real world data, run data statistics, and perform benchmarks. Alongside performing benchmarks, we will show an example on how to load backtests and compare backtests and benchmarks.
+
+
+```python
+import datetime
+from functools import reduce
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+import pandas as pd
+import talib
+from tqdm import tqdm
+import quantstats as qs
+from PIL import Image  
+qs.extend_pandas()
+%matplotlib inline
+```
+
+### Load Portfolio - Real Data
+
+
+```python
+def _retrieve_asset_dict():
+    root = os.getcwd()
+    data_env = root+"/data_env/"
+
+    files = [_ for _ in os.listdir(data_env) if "parquet" in _]    
+    assets_dict = {file: pd.read_parquet(data_env + "/" + file) for file in files}
+    counter=0
+    for key, value in assets_dict.items():
+        if counter==0:
+            main_index=value.index
+        else:
+            main_index=main_index.join(value.index,how="inner")
+
+    for key, value in assets_dict.items():
+        tmp_df=value.reindex(main_index)
+        tmp_df=tmp_df.fillna(method='ffill')
+        assets_dict[key]=tmp_df['close']  
+    return assets_dict
+
+def build_portfolio_df(asset_dict):
+    portfolio_df = pd.DataFrame()
+
+    for key, value in assets_dict.items():
+        key = key.split(".")[0]
+        tmp_df = pd.DataFrame(data=value)
+        tmp_df.columns=[key]
+        portfolio_df = pd.concat([portfolio_df, tmp_df], axis=1)
+
+    portfolio_df.index = pd.to_datetime(portfolio_df.index, errors='coerce').tz_localize(None)
+    return portfolio_df
+
+assets_dict = _retrieve_asset_dict()
+portfolio_df = build_portfolio_df(assets_dict)
+portfolio_df.index.name = 'Date'
+```
+
+
+```python
+portfolio_df.tail(5)
+```
+
+
+
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>USMV</th>
+      <th>EEMV</th>
+      <th>QUAL</th>
+      <th>SIZE</th>
+      <th>MTUM</th>
+      <th>VLUE</th>
+      <th>EFAV</th>
+    </tr>
+    <tr>
+      <th>Date</th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2020-11-17 05:00:00</th>
+      <td>67.20</td>
+      <td>59.46</td>
+      <td>112.47</td>
+      <td>105.7100</td>
+      <td>151.45</td>
+      <td>83.14</td>
+      <td>71.56</td>
+    </tr>
+    <tr>
+      <th>2020-11-18 05:00:00</th>
+      <td>66.35</td>
+      <td>59.36</td>
+      <td>111.14</td>
+      <td>104.5700</td>
+      <td>150.73</td>
+      <td>82.63</td>
+      <td>71.30</td>
+    </tr>
+    <tr>
+      <th>2020-11-19 05:00:00</th>
+      <td>66.47</td>
+      <td>59.41</td>
+      <td>111.29</td>
+      <td>105.2600</td>
+      <td>151.95</td>
+      <td>82.89</td>
+      <td>71.95</td>
+    </tr>
+    <tr>
+      <th>2020-11-20 05:00:00</th>
+      <td>66.15</td>
+      <td>59.62</td>
+      <td>110.46</td>
+      <td>104.8600</td>
+      <td>151.22</td>
+      <td>82.49</td>
+      <td>72.03</td>
+    </tr>
+    <tr>
+      <th>2020-11-23 05:00:00</th>
+      <td>66.24</td>
+      <td>59.73</td>
+      <td>111.23</td>
+      <td>106.1831</td>
+      <td>151.31</td>
+      <td>84.47</td>
+      <td>71.58</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+### Real Data Statistics
+
+
+```python
+def retrieve_statistics(portfolio_df):
+    sharpe = qs.stats.sharpe(portfolio_df)
+    sortino = qs.stats.sortino(portfolio_df) 
+    volatility = qs.stats.volatility(portfolio_df) 
+    max_drawdown = qs.stats.max_drawdown(portfolio_df) 
+    calmar = qs.stats.calmar(portfolio_df)
+    df = pd.DataFrame({
+        'Sharpe Ratio': round(sharpe, 2), 
+        'Sortino Ratio': round(sortino, 2), 
+        'Calmar Ratio': round(calmar, 2),
+        'Max DrawDown': round(max_drawdown, 2), 
+        'Volatility': round(volatility, 2)
+    })
+    return df
+
+
+stats_df = retrieve_statistics(portfolio_df)
+stats_df
+```
+
+
+
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Sharpe Ratio</th>
+      <th>Sortino Ratio</th>
+      <th>Calmar Ratio</th>
+      <th>Max DrawDown</th>
+      <th>Volatility</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>USMV</th>
+      <td>0.75</td>
+      <td>1.03</td>
+      <td>0.37</td>
+      <td>-0.33</td>
+      <td>0.18</td>
+    </tr>
+    <tr>
+      <th>EEMV</th>
+      <td>0.53</td>
+      <td>0.70</td>
+      <td>0.24</td>
+      <td>-0.32</td>
+      <td>0.16</td>
+    </tr>
+    <tr>
+      <th>QUAL</th>
+      <td>0.78</td>
+      <td>1.08</td>
+      <td>0.43</td>
+      <td>-0.34</td>
+      <td>0.20</td>
+    </tr>
+    <tr>
+      <th>SIZE</th>
+      <td>0.66</td>
+      <td>0.88</td>
+      <td>0.32</td>
+      <td>-0.39</td>
+      <td>0.22</td>
+    </tr>
+    <tr>
+      <th>MTUM</th>
+      <td>0.96</td>
+      <td>1.33</td>
+      <td>0.61</td>
+      <td>-0.34</td>
+      <td>0.22</td>
+    </tr>
+    <tr>
+      <th>VLUE</th>
+      <td>0.42</td>
+      <td>0.57</td>
+      <td>0.18</td>
+      <td>-0.39</td>
+      <td>0.23</td>
+    </tr>
+    <tr>
+      <th>EFAV</th>
+      <td>0.53</td>
+      <td>0.71</td>
+      <td>0.26</td>
+      <td>-0.28</td>
+      <td>0.15</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+### Real Data Benchmarks
+
+
+```python
+from lib.Benchmarks import RollingPortfolios
+portfolio_returns_df = portfolio_df.to_returns().dropna()
+in_window = 14
+prediction_window = 7
+
+rp_max_return = RollingPortfolios(
+    prices=portfolio_returns_df, 
+    in_window=in_window, 
+    prediction_window=prediction_window, 
+    portfolio_type='max_return'
+)
+
+rp_max_sharpe = RollingPortfolios(
+    prices=portfolio_returns_df, 
+    in_window=in_window, 
+    prediction_window=prediction_window, 
+    portfolio_type='max_sharpe'
+)
+
+rp_min_volatility = RollingPortfolios(
+    prices=portfolio_returns_df, 
+    in_window=in_window, 
+    prediction_window=prediction_window, 
+    portfolio_type='min_volatility'
+)
+```
+
+    100%|██████████| 138/138 [00:02<00:00, 63.45it/s]
+    100%|██████████| 138/138 [00:06<00:00, 21.01it/s]
+    100%|██████████| 138/138 [00:02<00:00, 65.78it/s]
+    100%|██████████| 138/138 [00:06<00:00, 20.69it/s]
+    100%|██████████| 138/138 [00:02<00:00, 60.64it/s]
+    100%|██████████| 138/138 [00:06<00:00, 21.04it/s]
+
+
+### Load Backtest
+
+
+```python
+def load_backtest(path, file_name, model_name):
+    backtest=pd.read_csv("./{}/{}.csv".format(path, file_name))
+    backtest['index']=backtest['index'].astype('datetime64[ns]')
+    backtest.rename(columns={'index':'Date','1': model_name}, inplace=True)
+    backtest.set_index('Date', inplace=True)
+    backtest_stats = retrieve_statistics(backtest)
+    return backtest, backtest_stats
+
+def display_graph(backtest, rp_df, factor):
+    df = pd.DataFrame({
+        'Real Dataset Benchmark': rp_df, 
+        'Backtest REINFORCE': backtest['REINFORCE'],
+        'Backtest REINFORCE Baseline': backtest['REINFORCE with Baseline'],
+        'Backtest Actor Critic No Trace': backtest['Actor Critic No Trace'],
+        'Backtest Actor Critic Trace': backtest['Actor Critic Trace']
+    })
+    df = df.dropna()
+    plt.figure()
+    df.plot(figsize=(15,10),colormap='Paired', title='Real Data Benchmark vs. Backtests - Risk Aversion Factor {}'.format(factor))
+    plt.xlabel('Date')
+    plt.ylabel('Return')
+    plt.show()
+
+
+def load_backtest_risk_0():
+    path = 'backtest_demeaned_risk_aversion'
+    backtest_actor_critic_no_trace, backtest_actor_critic_no_trace_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_0_backtest_actor_critic_no_trace', 'Actor Critic No Trace') 
+    backtest_actor_critic_trace, backtest_actor_critic_trace_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_0_backtest_actor_critic_trace', 'Actor Critic Trace') 
+    backtest_reinforce, backtest_reinforce_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_0_backtest_reinforce', 'REINFORCE') 
+    backtest_reinforce_baseline, backtest_reinforce_baseline_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_0_backtest_reinforce_baseline', 'REINFORCE with Baseline')
+    
+    lst = [backtest_reinforce, backtest_reinforce_baseline, backtest_actor_critic_no_trace, backtest_actor_critic_trace]
+    backtest_risk_0 = reduce(lambda left,right: pd.merge(left,right,on='Date'), lst)
+
+    backtest_risk_0_stats = pd.concat([backtest_reinforce_stats, backtest_reinforce_baseline_stats,
+                                       backtest_actor_critic_no_trace_stats,backtest_actor_critic_trace_stats])
+    return backtest_risk_0, backtest_risk_0_stats
+
+def load_backtest_risk_10():
+    path = 'backtest_demeaned_risk_aversion_10'
+    backtest_actor_critic_no_trace, backtest_actor_critic_no_trace_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_10_backtest_actor_critic_no_trace', 'Actor Critic No Trace') 
+    backtest_actor_critic_trace, backtest_actor_critic_trace_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_10_backtest_actor_critic_trace', 'Actor Critic Trace') 
+    backtest_reinforce, backtest_reinforce_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_10_backtest_reinforce', 'REINFORCE') 
+    backtest_reinforce_baseline, backtest_reinforce_baseline_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_10_backtest_reinforce_baseline', 'REINFORCE with Baseline')
+    
+    lst = [backtest_reinforce, backtest_reinforce_baseline, backtest_actor_critic_no_trace, backtest_actor_critic_trace]
+    backtest_risk_0 = reduce(lambda left,right: pd.merge(left,right,on='Date'), lst)
+
+    backtest_risk_0_stats = pd.concat([backtest_reinforce_stats, backtest_reinforce_baseline_stats,
+                                       backtest_actor_critic_no_trace_stats,backtest_actor_critic_trace_stats])
+    return backtest_risk_0, backtest_risk_0_stats
+
+
+rp_max_return_benchmark = ((rp_max_return.hrp_weights * portfolio_returns_df).sum(axis=1) + 1).cumprod()
+rp_max_sharpe_benchmark = ((rp_max_sharpe.hrp_weights * portfolio_returns_df).sum(axis=1) + 1).cumprod()
+rp_min_volatility_benchmark = ((rp_min_volatility.hrp_weights * portfolio_returns_df).sum(axis=1) + 1).cumprod()
+
+benchmarks = pd.DataFrame({
+    'Benchmark - Max Return': rp_max_return_benchmark, 
+    'Benchmark - Max Sharpe': rp_max_sharpe_benchmark,
+    'Benchmark - Min Volatility': rp_min_volatility_benchmark
+})
+
+backtest_risk_0, backtest_risk_0_stats = load_backtest_risk_0()
+display_graph(backtest_risk_0, rp_max_return_benchmark, factor='0')
+
+backtest_risk_10, backtest_risk_10_stats = load_backtest_risk_10()
+display_graph(backtest_risk_10, rp_max_return_benchmark, factor='10')
+
+```
+
+![Figure 1](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/output_11_1.png "Figure 1 - Portfolio Manager Perspective of Reinforcement Learning")
+    
+![Figure 1](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/output_11_3.png "Figure 1 - Portfolio Manager Perspective of Reinforcement Learning")    
+
+
+
+```python
+backtest_risk_0_stats
+```
+
+
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Sharpe Ratio</th>
+      <th>Sortino Ratio</th>
+      <th>Calmar Ratio</th>
+      <th>Max DrawDown</th>
+      <th>Volatility</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>REINFORCE</th>
+      <td>1.92</td>
+      <td>2.66</td>
+      <td>6.13</td>
+      <td>-0.07</td>
+      <td>0.19</td>
+    </tr>
+    <tr>
+      <th>REINFORCE with Baseline</th>
+      <td>1.93</td>
+      <td>2.69</td>
+      <td>6.26</td>
+      <td>-0.07</td>
+      <td>0.19</td>
+    </tr>
+    <tr>
+      <th>Actor Critic No Trace</th>
+      <td>1.94</td>
+      <td>2.69</td>
+      <td>6.24</td>
+      <td>-0.07</td>
+      <td>0.18</td>
+    </tr>
+    <tr>
+      <th>Actor Critic Trace</th>
+      <td>1.91</td>
+      <td>2.66</td>
+      <td>6.20</td>
+      <td>-0.07</td>
+      <td>0.18</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
+
+
+
+```python
+backtest_risk_10_stats
+```
+
+
+
+
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>Sharpe Ratio</th>
+      <th>Sortino Ratio</th>
+      <th>Calmar Ratio</th>
+      <th>Max DrawDown</th>
+      <th>Volatility</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>REINFORCE</th>
+      <td>1.90</td>
+      <td>2.63</td>
+      <td>6.10</td>
+      <td>-0.07</td>
+      <td>0.18</td>
+    </tr>
+    <tr>
+      <th>REINFORCE with Baseline</th>
+      <td>1.92</td>
+      <td>2.67</td>
+      <td>6.21</td>
+      <td>-0.07</td>
+      <td>0.18</td>
+    </tr>
+    <tr>
+      <th>Actor Critic No Trace</th>
+      <td>1.94</td>
+      <td>2.70</td>
+      <td>6.23</td>
+      <td>-0.07</td>
+      <td>0.18</td>
+    </tr>
+    <tr>
+      <th>Actor Critic Trace</th>
+      <td>1.93</td>
+      <td>2.68</td>
+      <td>6.24</td>
+      <td>-0.07</td>
+      <td>0.18</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+
