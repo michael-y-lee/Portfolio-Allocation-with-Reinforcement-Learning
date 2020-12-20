@@ -51,6 +51,6 @@ In terms of data requirements for our model, the assets used for our model shoul
 to load the asset price data from the \verb!data_env! directory into our environment and persist data transformations for further training.  Please refer to our User Guide for more details of the data requirements and an example of how the real-world data is loaded into our models.
 
 
-[2] Data provided by barchart.com
+[2] Data provided by barchart.com <https://barchart.com>
 
 [3] <https://www.ishares.com/us/strategies/smart-beta-investing>
