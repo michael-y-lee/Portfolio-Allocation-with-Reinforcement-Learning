@@ -88,7 +88,7 @@ def plot_backtest(linear_agent_train, env_test, test_input, model):
 
 # Reviewing Real-World Data
 
-The real-world data that we use for our models is located in the "data_env" folder.  If you have other data, please save it in the "data_env" folder as a parquet file.  Below is an example of what the ETF data history file should contain.   
+The real-world data that we use for our models is located in the "data_env" folder. If you have other assets you would like to use, please obtain a time series of daily time bars and save it in the "data_env" folder as a separate parquet file for each asset. While all asset price quote history can be included (open, high, low, close, volume) in the parquet file, please ensure that the closing price history is included under a column named "close" as we will be using the closing price for our model inputs. Below is an example of what our ETF data history files contains.
 
 
 ```python
@@ -96,8 +96,7 @@ The real-world data that we use for our models is located in the "data_env" fold
 pd.read_parquet(data_env+'EEMV.parquet').head()
 ```
 
-To view what a portfolio of ETFs looks like, we create a portolio with the ETF files which are in the "data_env" folder.  We can then split these datasets into train and test sets for testing our model performances.
-
+To view what a portfolio of ETFs looks like, we create a portolio with the ETF files which are in the "data_env" folder. We can then split these datasets into train and test sets for testing our model performances.
 
 ```python
 # create a portfolio
@@ -128,8 +127,7 @@ portfolio_df_test.head()
 
 # Set Up Environment
 
-Here, we set up the environment to load ETFs from the "data_env" folder and persist features.  We also specify the meta parameters and objective parameters we want to specify for the environment.
-
+Here, we set up the environment to load ETFs from the "data_env" folder and persist data transformations for further training. We also specify the meta parameters and objective parameters we want for the environment.
 
 ```python
 # parameters related to the transformation of data, this parameters govern an step before the algorithm
