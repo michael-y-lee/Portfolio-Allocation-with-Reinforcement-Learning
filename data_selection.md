@@ -53,4 +53,4 @@ to load the asset price data from the \verb!data_env! directory into our environ
 
 [2] Data provided by barchart.com
 
-[3] https://www.ishares.com/us/strategies/smart-beta-investing
+[3] <https://www.ishares.com/us/strategies/smart-beta-investing>
