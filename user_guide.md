@@ -4,6 +4,28 @@ notebook:
 nav_include: 7
 ---
 
+### Installation Requirements
+
+The complete list of libraries used for the project can be found in the file requirements.txt in the repository. While most of the libraries are standard and can be installed directly through pip
+
+```python
+pip install -r requirements.txt
+```
+
+There are a few that require special care. Below are further details on their installation.
+
+1.  Pytorch : Use the OS matrix described here: <https://pytorch.org/get-started/locally/>
+
+2.  Spinnig Up : Needs to be built from source, complete details can be found here: <https://spinningup.openai.com/en/latest/user/installation.html>
+
+3.  PyportfolioOpt: Windows users may require extra steps to install cvxopt, details can be found here: <https://pyportfolioopt.readthedocs.io/en/latest/UserGuide.html> and <https://cvxopt.org/install/>
+
+4.  QuantStats : Needs to be built from source, complete details can be found here: <https://github.com/ranaroussi/quantstats>
+
+5.  We have also included a DataFeatures class that can generate several technical indicators using the library “Talib". For details on installation please follow: <https://mrjbq7.github.io/ta-lib/install.html>
+
+
+### User Guide Steps for Real-World Data
 This is a user guide for how to load real-world data into our model and how to perform Policy-Gradient Methods such as REINFORCE, REINFORCE with Baseline, Actor-Critic, and Actor-Critic with Eligibility Traces.
 
 
