@@ -47,7 +47,7 @@ We begin by dividing the ETF price history into two datasets, the training set w
 
 ![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk0_weights.png)
 
-Using the policies obtained in the Policy Gradient Methods training, we perform a backtest on each of the PG Methods using the test set data and compare the backtest against the benchmark return.  The benchmark return is obtained using PyPortfolioOpt's mean-variance optimization with hierarchical risk parity weights.  Figure 21 shows that all four PG methods have backtest returns which are similar to each other.  The backtest returns appear to be similar in behavior to the benchmark return, but at a lower magnitude of return.
+Using the policies obtained in the Policy Gradient Methods training, we perform a backtest on each of the PG Methods using the test set data and compare the backtest against the benchmark return.  The benchmark return is obtained using PyPortfolioOpt's mean-variance optimization with hierarchical risk parity weights.  Figure 21 shows that all four PG Methods have backtest returns which are similar to each other.  The backtest returns appear to be similar in behavior to the benchmark return, but at a lower magnitude of return.
 
 ![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/plot_backtest_0.png)
 
