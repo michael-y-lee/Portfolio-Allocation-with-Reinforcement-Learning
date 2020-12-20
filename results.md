@@ -100,4 +100,4 @@ In the following figures, we can observe the rolling Sharpe Ratios of each respe
 
 
 [5] Reward function could also be parametrized as <img src="https://render.githubusercontent.com/render/math?math=R_t = \lambda\Delta\Pi_t -(1-\lambda) a_t^T\Sigma a_t">. In this case caution needs to be taken in scaling the covariance matrix.
-[6] QuantStats performs portfolio profiling, which allows portfolio managers to understand their performance better by providing them with in-depth analytics and risk metrics. [https://github.com/ranaroussi/quantstats]
+[6] QuantStats performs portfolio profiling, which allows portfolio managers to understand their performance better by providing them with in-depth analytics and risk metrics. <https://github.com/ranaroussi/quantstats>
