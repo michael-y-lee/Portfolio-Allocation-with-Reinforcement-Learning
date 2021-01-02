@@ -8,7 +8,7 @@ nav_include: 4
 
 Each policy will be compared with several benchmark portfolios constructed using traditional portfolio optimization techniques. The portfolio benchmarks that we will use are: maximum return, maximum Sharpe ratio, and minimum volatility. [1]
 
-### Performance Metrics
+## Performance Metrics
 
 The performance metrics are computed using the Critical Line Algorithm (CLA). The CLA is a robust alternative to the quadratic solver used to find mean-variance optimal portfolios, that is especially advantageous when we apply linear inequalities.
 
@@ -38,7 +38,7 @@ Volatility Formula:
 
 where ***T*** is time.
 
-### Observed Metrics
+## Observed Metrics
 
 To evaluate the performance of our models and the performance of our raw data, we will observe the following statistics in addition to the performance metrics.
 
@@ -72,7 +72,7 @@ Draw-Downs Formula:
 
 where ***T*** is time and ***X*(*T*)** is the value of the asset at time ***T***.  
 
-### Training and Testing Data Set
+## Training and Testing Data Set
 
 To estimate the performance of our reinforcement learning algorithms, we will create training and testing datasets. These datasets will be used to validate the performance of our models.
 
