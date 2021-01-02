@@ -6,11 +6,17 @@ nav_include: 4
 
 ## Overview
 
-Each policy will be compared with several benchmark portfolios constructed using traditional portfolio optimization techniques.  The portfolio benchmarks that we will use are: mean-variance optimization, equal risk contribution and hierarchical risk parity. [1] 
+Each policy will be compared with several benchmark portfolios constructed using traditional portfolio optimization techniques. The portfolio benchmarks that we will use are: maximum return, maximum Sharpe ratio, and minimum volatility. [1]
 
 ### Performance Metrics
 
+The performance metrics are computed using the Critical Line Algorithm (CLA). The CLA is a robust alternative to the quadratic solver used to find mean-variance optimal portfolios, that is especially advantageous when we apply linear inequalities.
+
 To evaluate our model, we will split the dataset in train and test sets. After training our models, we will backtest the strategy using the test set. The performance metrics that we will use for the evaluation will be the following:
+
+#### Maximum Return
+
+The maximum return is a simple performance metric which is based on the maximum return the portfolio. We will utilize the CLA algorithm and compute the entire efficient frontier and extract the maximum return weights.
 
 #### Sharpe Ratio
 
@@ -21,6 +27,20 @@ Sharpe Ratio Formula:
 <img src="https://render.githubusercontent.com/render/math?math=S_{a} = \frac{E[R_{a} - R_{b}]}{\sigma_{a}} = \frac{E[R_{a} - R_{b}]}{\sqrt{var[R_{a} - R_{b}]}}">
 
 where ***R*<sub>*a*</sub>** is the asset return, ***R*<sub>*b*</sub>** is the risk-free return.
+
+#### Volatility
+
+Volatility refers to the amount of uncertainty or risk related to the size of changes in a security's value. A higher volatility means that a security's value can potentially be spread out over a larger range of values. This means that the price of the security can change dramatically over a short time period in either direction. A lower volatility means that a security's value does not fluctuate dramatically, and tends to be more steady.
+
+Volatility Formula:
+
+<img src="https://render.githubusercontent.com/render/math?math=\sigma_T = \sigma * \sqrt{T}">
+
+where ***T*** is time.
+
+### Observed Metrics
+
+To evaluate the performance of our models and the performance of our raw data, we will observe the following statistics in addition to the performance metrics.
 
 #### Sortino Ratio
 
@@ -52,21 +72,17 @@ Draw-Downs Formula:
 
 where ***T*** is time and ***X*(*T*)** is the value of the asset at time ***T***.  
 
-#### Volatility
-
-Volatility refers to the amount of uncertainty or risk related to the size of changes in a security's value. A higher volatility means that a security's value can potentially be spread out over a larger range of values. This means that the price of the security can change dramatically over a short time period in either direction. A lower volatility means that a security's value does not fluctuate dramatically, and tends to be more steady.
-
-Volatility Formula:
-
-<img src="https://render.githubusercontent.com/render/math?math=\sigma_T = \sigma * \sqrt{T}">
-
-where ***T*** is time.
-
 ### Training and Testing Data Set
 
 To estimate the performance of our reinforcement learning algorithms, we will create training and testing datasets. These datasets will be used to validate the performance of our models.
 
-We begin by dividing the Real Dataset ETF Price History's into two datasets, the training set which includes ETF price history from January 2017 to March 2020, and a test dataset with ETF price history from April 2020 to November 2020.
+The Real-World Dataset ETF consists of data from January 2017 to November 2020. We begin by dividing the Real-World Dataset ETF closing price history into two datasets, the training set which includes ETF closing price history from February 2019 to February 2020, and a test dataset with ETF closing price history from March 2020 to November 2020. We selected the training and testing data sets due to the significant draw-downs observed in December 2018 to January 2019 and February 2020 to March 2020.
+
+Figure 9 shows the Real-World Dataset ETF returns for the training dataset. Figure 10 shows the Real-World Dataset ETF returns for the testing dataset. Due to the significant draw-downs observed in February 2020 and the rapid market bounce starting March 2020, our testing dataset observed significant levels of returns and volatilities. Moving forward to our results, our performance metric benchmarks will be based on the training dataset, while the backtests performed will be based on the testing dataset.
+
+![Figure 2](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_9.png)
+
+![Figure 2](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_10.png)
 
 
 [1] We will use the public library PyPortfolioOpt. More details can be found in here <https://pyportfolioopt.readthedocs.io/en/latest/>
