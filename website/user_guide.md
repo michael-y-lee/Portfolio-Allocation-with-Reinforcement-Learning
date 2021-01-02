@@ -531,9 +531,6 @@ rp_min_volatility = RollingPortfolios(
     100%|██████████| 138/138 [00:06<00:00, 21.04it/s]
 
 
-### Load Backtest
-
-
 ```python
 rp_max_return_benchmark = ((rp_max_return.hrp_weights * portfolio_returns_df).sum(axis=1) + 1).cumprod()
 rp_max_sharpe_benchmark = ((rp_max_sharpe.hrp_weights * portfolio_returns_df).sum(axis=1) + 1).cumprod()
