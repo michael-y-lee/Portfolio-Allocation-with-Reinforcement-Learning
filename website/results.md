@@ -64,7 +64,7 @@ Figure 17 shows how the REINFORCE algorithm selects a portfolio with low volatil
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_17.png)
 
-Figure 18 shows the contribution of the reward and volatility components of the reward function.  The components of the reward function are normalized so that they both have approximately the same magnitude at the start of the model training. Since ***λ = 0***, the reward function in our case is represented as <img src="https://render.githubusercontent.com/render/math?math=R_t=-a_t^T{\sigma}a_t"> (negative magnitude of the volatility component).
+Figure 18 shows the contribution of the reward and volatility components of the reward function.  The components of the reward function are normalized so that they both have approximately the same magnitude at the start of the model training. Since ***λ = 0***, the reward function in our case is represented as <img src="https://render.githubusercontent.com/render/math?math=R_t=-a_t^T\Sigma a_t"> (negative magnitude of the volatility component).
 
 Figure 19 shows the asset weight distribution over the model training.  The model converges on the correct solution for a minimum volatility reward function with ***λ = 0***, consistently allocating 100% of the portfolio in EFAV (the lower volatility asset) after 2500 epochs of training.
 
@@ -90,35 +90,62 @@ In Figure 24, we perform a backtest on the test dataset and note that it has a h
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_24.png)
 
+#### REINFORCE with Baseline 
+
+##### ***λ = 0*** Case (Minimum Volatility)
+
+In Figure 25, the REINFORCE with Baseline algorithm selects a low volatility portfolio (3.53%) for a risk aversion parameter ***λ = 0*** during model training.  Although there is some variation in the backtests at the start of the model training (as evidenced by the light blue backtest returns in the plot), the subsequent backtests with the dark blue backtests are fairly stable and consistent.  
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_25.png)
+
+Figure 26 shows that the backtest of the test dataset has a volatility of 4.11%, which is below the benchmark minimum volatility portfolio's volatility of 4.23%.  Please refer to Appendix B, Section 8.2 for the reward function and the asset weight plots.
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_26.png)
+
+##### ***λ = 1*** Case (Maximum Return)
+
+Figure 27 shows that with a maximum return reward function ***λ = 1***, the REINFORCE with Baseline algorithm selects the highest return portfolio (24.03%) for the training data set, with a higher return than the maximum return benchmark (18.21%).  This conclusion is also shown with the test dataset in Figure 28, where the test benchmark has a higher return (54.34%) than the maximum return benchmark (32.67%).  Please refer to Appendix B, Section 8.2 for the reward function and the asset weight plots. 
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_27.png)
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_28.png)
+
+#### Actor Critic 
+
+##### ***λ = 0*** Case (Minimum Volatility)
+
+In Figure 29, the Actor-Critic algorithm converges on a portfolio with a volatility (3.53%) lower than the minimum volatility benchmark portfolio's volatility (3.95%). Figure 30 shows that the Actor-Critic algorithm also selects the minimum volatility portfolio for the test dataset, with a backtest volatility of 4.12% as compared to the minimum volatility benchmark's volatility of 4.23% in the test dataset. Please refer to Appendix B, Section 8.2 for the reward function and the asset weight plots.
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_29_30.png)
+
+##### ***λ = 1*** Case (Maximum Return)
+
+Figure 31 shows that with a maximum return reward function ***λ = 1***, the Actor-Critic algorithm selects a maximum return portfolio (selected portfolio's return is 23.79%, while the maximum return benchmark's return is 18.21%). When we apply the weights learned from the training dataset to the test dataset in Figure 32 and perform a backtest, the backtest has a return of 52.87%, which is higher than the test dataset maximum return benchmark's return of 32.67%.  Please refer to Appendix B, Section 8.2 for the reward function and the asset weight plots. 
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_31_32.png)
+
+#### Actor Critic with Eligibility Traces
+
+##### ***λ = 0*** Case (Minimum Volatility)
+
+In Figure 33, the Actor-Critic with Eligibility Traces algorithm converges on a minimum volatility portfolio for a risk aversion parameter ***λ = 0*** during model training.  The training backtest has volatility of 3.53% across the majority of the training epochs, and this is lower than the minimum volatility benchmark of 3.95%. 
+
+Figure 34 shows that the Actor-Critic with Eligibility Traces algorithm selects the minimum volatility portfolio for the test dataset (volatility of 4.1% while the minimum volatility benchmark has a volatility of 4.23%)  Please refer to Appendix B, Section 8.2 for the reward function and the asset weight plots.
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_33_34.png)
+
+##### ***λ = 1*** Case (Maximum Return)
+
+Figure 35 shows that with a max return reward function ***λ = 1***, the Actor-Critic with Eligibility Traces algorithm selects a portfolio with a return of 23.79%, which is higher than the maximum return benchmark's return (18.21%). Figure 36 shows that a backtest of the test dataset has a return of 53.81% while the maximum return benchmark has a return of 32.67%. Please refer to Appendix B, Section 8.2 for the reward function and the asset weight plots.   
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_35_36.png)
+
 
 ## Real Dataset - Full Portfolio
 ## Statistics
 
-## Real Dataset
 
-
-We begin by dividing the ETF price history into two datasets, the training set which includes ETF price history from January 2017 to March 2020, and a test dataset with ETF price history from April 2020 to November 2020. The series are de-meaned and we run two cases at different levels of risk aversion ***λ***, 0 and 10. In Figures 11-14, we see that with a risk aversion ***λ***=0, we did not reach convergence in any of the PG Methods. This is further evidenced by having a relatively equal asset weight distribution as seen in Figures 15-18. 
-
-![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/rewards_11_12.png)
-
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figures_13_18.png)
-
-Using the policies obtained in the Policy Gradient Methods training, we perform a backtest on each of the PG Methods using the test set data and compare the backtest against the benchmark return.  The benchmark return is obtained using PyPortfolioOpt's mean-variance optimization with hierarchical risk parity weights.  Figure 19 shows that all four PG Methods have backtest returns which are similar to each other.  The backtest returns appear to be similar in behavior to the benchmark return, but at a lower magnitude of return.
-
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk_aversion_0.png)
-
-In Figures 20-23, we run each of the Policy Gradient Methods using a risk aversion ***λ*** parameter of 10 for 10,000 epochs and note that the the PG Methods do not converge in these cases as well. Figures 24-27 show that in each of the PG Methods, the distribution appears to be fairly equal amongst all assets in the portfolio.
-
-![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figures_20_25.png)
-
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figures_26_27.png)
-
-In Figure 28, we compare the backtest returns for each of the PG Methods when ***λ***=10 to the benchmark return and observe that the backtest returns are similar to the results when ***λ***=0; they have a lower magnitude of return as compared to the benchmark return. 
-
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/risk_aversion_10.png)
-
-
-## Statistics
+DELETE FROM HERE ...
 
 Now that we have shown the results of our dataset, we will be evaluating the statistical components of our dataset. The statistical components will be based on the performance metrics described earlier. To generate our statistical components we will be using the public library of QuantStats.[2]
 
