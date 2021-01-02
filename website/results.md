@@ -5,16 +5,10 @@ nav_include: 5
 ---
 
 ## Overview
-https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#control-dataset
-
 <br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#control-dataset"> Control Dataset </a>
-
 <br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#real-dataset---two-asset-portfolio"> Real Dataset - Two Asset Portfolio </a>
-
 <br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#real-dataset---full-portfolio"> Real Dataset - Full Portfolio </a>
-
 <br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#statistics"> Statistics </a>
-
 
 ## Control Dataset
 
