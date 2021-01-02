@@ -38,11 +38,7 @@
         {% for node in navigation_pages %}
                 {% if node.nav_include %}
                     {% if page.url == node.url %}
-                      {% if node.title == "Data Selection" %}
-                        &nbsp;|&nbsp;<a class="active" href="{{node.url | prepend: site.baseurl}}" class="active" style="color:#b4d5fe">Data Selection and Processing</a>
-                      {% else %}
                         &nbsp;|&nbsp;<a class="active" href="{{node.url | prepend: site.baseurl}}" class="active" style="color:#b4d5fe">{{node.title}}</a>
-                      {% endif %}
                     {% else %}
                       &nbsp;|&nbsp;<a href="{{node.url | prepend: site.baseurl}}">{{node.title}}</a>
                     {% endif %}
