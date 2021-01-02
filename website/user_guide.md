@@ -535,59 +535,6 @@ rp_min_volatility = RollingPortfolios(
 
 
 ```python
-def load_backtest(path, file_name, model_name):
-    backtest=pd.read_csv("./{}/{}.csv".format(path, file_name))
-    backtest['index']=backtest['index'].astype('datetime64[ns]')
-    backtest.rename(columns={'index':'Date','1': model_name}, inplace=True)
-    backtest.set_index('Date', inplace=True)
-    backtest_stats = retrieve_statistics(backtest)
-    return backtest, backtest_stats
-
-def display_graph(backtest, rp_df, factor):
-    df = pd.DataFrame({
-        'Real Dataset Benchmark': rp_df, 
-        'Backtest REINFORCE': backtest['REINFORCE'],
-        'Backtest REINFORCE Baseline': backtest['REINFORCE with Baseline'],
-        'Backtest Actor Critic No Trace': backtest['Actor Critic No Trace'],
-        'Backtest Actor Critic Trace': backtest['Actor Critic Trace']
-    })
-    df = df.dropna()
-    plt.figure()
-    df.plot(figsize=(15,10),colormap='Paired', title='Real Data Benchmark vs. Backtests - Risk Aversion Factor {}'.format(factor))
-    plt.xlabel('Date')
-    plt.ylabel('Return')
-    plt.show()
-
-
-def load_backtest_risk_0():
-    path = 'backtest_demeaned_risk_aversion'
-    backtest_actor_critic_no_trace, backtest_actor_critic_no_trace_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_0_backtest_actor_critic_no_trace', 'Actor Critic No Trace') 
-    backtest_actor_critic_trace, backtest_actor_critic_trace_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_0_backtest_actor_critic_trace', 'Actor Critic Trace') 
-    backtest_reinforce, backtest_reinforce_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_0_backtest_reinforce', 'REINFORCE') 
-    backtest_reinforce_baseline, backtest_reinforce_baseline_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_0_backtest_reinforce_baseline', 'REINFORCE with Baseline')
-    
-    lst = [backtest_reinforce, backtest_reinforce_baseline, backtest_actor_critic_no_trace, backtest_actor_critic_trace]
-    backtest_risk_0 = reduce(lambda left,right: pd.merge(left,right,on='Date'), lst)
-
-    backtest_risk_0_stats = pd.concat([backtest_reinforce_stats, backtest_reinforce_baseline_stats,
-                                       backtest_actor_critic_no_trace_stats,backtest_actor_critic_trace_stats])
-    return backtest_risk_0, backtest_risk_0_stats
-
-def load_backtest_risk_10():
-    path = 'backtest_demeaned_risk_aversion_10'
-    backtest_actor_critic_no_trace, backtest_actor_critic_no_trace_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_10_backtest_actor_critic_no_trace', 'Actor Critic No Trace') 
-    backtest_actor_critic_trace, backtest_actor_critic_trace_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_10_backtest_actor_critic_trace', 'Actor Critic Trace') 
-    backtest_reinforce, backtest_reinforce_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_10_backtest_reinforce', 'REINFORCE') 
-    backtest_reinforce_baseline, backtest_reinforce_baseline_stats = load_backtest(path, 'demeaned_return_reward_variance_risk_10_backtest_reinforce_baseline', 'REINFORCE with Baseline')
-    
-    lst = [backtest_reinforce, backtest_reinforce_baseline, backtest_actor_critic_no_trace, backtest_actor_critic_trace]
-    backtest_risk_0 = reduce(lambda left,right: pd.merge(left,right,on='Date'), lst)
-
-    backtest_risk_0_stats = pd.concat([backtest_reinforce_stats, backtest_reinforce_baseline_stats,
-                                       backtest_actor_critic_no_trace_stats,backtest_actor_critic_trace_stats])
-    return backtest_risk_0, backtest_risk_0_stats
-
-
 rp_max_return_benchmark = ((rp_max_return.hrp_weights * portfolio_returns_df).sum(axis=1) + 1).cumprod()
 rp_max_sharpe_benchmark = ((rp_max_sharpe.hrp_weights * portfolio_returns_df).sum(axis=1) + 1).cumprod()
 rp_min_volatility_benchmark = ((rp_min_volatility.hrp_weights * portfolio_returns_df).sum(axis=1) + 1).cumprod()
@@ -597,13 +544,6 @@ benchmarks = pd.DataFrame({
     'Benchmark - Max Sharpe': rp_max_sharpe_benchmark,
     'Benchmark - Min Volatility': rp_min_volatility_benchmark
 })
-
-backtest_risk_0, backtest_risk_0_stats = load_backtest_risk_0()
-display_graph(backtest_risk_0, rp_max_return_benchmark, factor='0')
-
-backtest_risk_10, backtest_risk_10_stats = load_backtest_risk_10()
-display_graph(backtest_risk_10, rp_max_return_benchmark, factor='10')
-
 ```
 
 [1] <https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/requirements.txt>
