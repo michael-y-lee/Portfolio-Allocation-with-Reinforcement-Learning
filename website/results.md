@@ -4,6 +4,16 @@ notebook:
 nav_include: 5
 ---
 
+## Overview
+https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#control-dataset
+
+<br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#control-dataset"> Control Dataset </a>
+
+<br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#control-dataset"> Control Dataset </a>
+
+<br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#control-dataset"> Control Dataset </a>
+
+
 ## Control Dataset
 
 We tested all our models on a simulation of a 2-asset environment. The results were consistent across different levels of **μ** and **σ**. Below is an example of the model convergence using a predefined choice of parameters and for each of the previously discussed reward functions 
@@ -35,6 +45,15 @@ Below we present the average weights per epoch at different levels of risk avers
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/model_convergence_1_new.png)
 
 ![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/model_convergence_2_new.png)
+
+
+
+## Real Dataset - Two Asset Portfolio
+## Real Dataset - Full Portfolio
+## Statistics
+
+
+
 
 
 ## Real Dataset
