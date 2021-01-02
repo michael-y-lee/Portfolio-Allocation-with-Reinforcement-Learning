@@ -8,17 +8,17 @@ nav_include: 5
 [Control Dataset](#control-dataset)
 
 [Real Dataset - Two Asset Portfolio](#real-dataset---two-asset-portfolio)
-- [REINFORCE](#reinforce)
-- [REINFORCE with Baseline](#reinforce-with-baseline)
-- [Actor Critic](#actor-critic)
-- [Actor Critic with Eligibility Traces](#actor-critic-with-eligibility-traces)
+- [REINFORCE](#two-asset-portfolio-reinforce)
+- [REINFORCE with Baseline](#two-asset-portfolio-reinforce-with-baseline)
+- [Actor Critic](#two-asset-portfolio-actor-critic)
+- [Actor Critic with Eligibility Traces](#two-asset-portfolio-actor-critic-with-eligibility-traces)
 
 
 [Real Dataset - Full Portfolio](#real-dataset---full-portfolio)
-- [REINFORCE](#reinforce)
-- [REINFORCE with Baseline](#reinforce-with-baseline)
-- [Actor Critic](#actor-critic)
-- [Actor Critic with Eligibility Traces](#actor-critic-with-eligibility-traces)
+- [REINFORCE](#full-portfolio-reinforce)
+- [REINFORCE with Baseline](#full-portfolio-reinforce-with-baseline)
+- [Actor Critic](#full-portfolio-actor-critic)
+- [Actor Critic with Eligibility Traces](#full-portfolio-actor-critic-with-eligibility-traces)
 
 
 [Statistics](#statistics)
@@ -66,7 +66,7 @@ Now that we have successfully demonstrated the operation of the Policy Gradient 
 
 We begin our evaluation of the real-world data by testing the PG Methods on a two asset portfolio containing MTUM (the higher return asset) and EFAV (the lower volatility asset) to check for model convergence and correct operation.  For each algorithm, we train our models for five different cases of ***λ***: 0, 0.2, 0.5, 0.8, and 1 to see how these algorithms select a portfolio which balances between different levels of risk and reward.  We discuss our findings for the ***λ = 0*** (minimum volatility) and ***λ = 1*** (maximum return) cases in this section.  Please refer to Appendix B, Section 8.2 for the results of the ***λ*** = 0.2, 0.5, and 0.8 cases.
 
-#### REINFORCE 
+#### Two Asset Portfolio REINFORCE 
 
 ##### ***λ = 0*** Case (Minimum Volatility)
 
@@ -100,7 +100,7 @@ In Figure 24, we perform a backtest on the test dataset and note that it has a h
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_24.png)
 
-#### REINFORCE with Baseline 
+#### Two Asset Portfolio REINFORCE with Baseline 
 
 ##### ***λ = 0*** Case (Minimum Volatility)
 
@@ -120,7 +120,7 @@ Figure 27 shows that with a maximum return reward function ***λ = 1***, the REI
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_28.png)
 
-#### Actor Critic 
+#### Two Asset Portfolio Actor Critic 
 
 ##### ***λ = 0*** Case (Minimum Volatility)
 
@@ -134,7 +134,7 @@ Figure 31 shows that with a maximum return reward function ***λ = 1***, the Act
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_31_32.png)
 
-#### Actor Critic with Eligibility Traces
+#### Two Asset Portfolio Actor Critic with Eligibility Traces
 
 ##### ***λ = 0*** Case (Minimum Volatility)
 
@@ -153,19 +153,19 @@ Figure 35 shows that with a max return reward function ***λ = 1***, the Actor-C
 
 ## Real Dataset - Full Portfolio
 
-#### REINFORCE
+#### Full Portfolio REINFORCE
 ##### ***λ = 0*** Case (Minimum Volatility)
 ##### ***λ = 1*** Case (Maximum Return)
 
-#### REINFORCE with Baseline
+#### Full Portfolio REINFORCE with Baseline
 ##### ***λ = 0*** Case (Minimum Volatility)
 ##### ***λ = 1*** Case (Maximum Return)
 
-#### Actor Critic
+#### Full Portfolio Actor Critic
 ##### ***λ = 0*** Case (Minimum Volatility)
 ##### ***λ = 1*** Case (Maximum Return)
 
-#### Actor Critic with Eligibility Traces
+#### Full Portfolio Actor Critic with Eligibility Traces
 ##### ***λ = 0*** Case (Minimum Volatility)
 ##### ***λ = 1*** Case (Maximum Return)
 
