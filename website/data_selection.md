@@ -1,5 +1,5 @@
 ---
-title: Data Selection and Processing
+title: Data Selection
 notebook:
 nav_include: 2
 ---
