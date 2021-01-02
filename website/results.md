@@ -10,6 +10,12 @@ nav_include: 5
 <br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#real-dataset---full-portfolio"> Real Dataset - Full Portfolio </a>
 <br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#statistics"> Statistics </a>
 
+[Control Dataset](#control-dataset)
+[Real Dataset - Two Asset Portfolio](#real-dataset---two-asset-portfolio)
+[Real Dataset - Full Portfolio](#real-dataset---full-portfolio)
+[Statistics](#statistics)
+
+
 ## Control Dataset
 
 We tested all our models on a simulation of a 2-asset environment. The results were consistent across different levels of **μ** and **σ**. Below is an example of the model convergence using a predefined choice of parameters and for each of the previously discussed reward functions 
