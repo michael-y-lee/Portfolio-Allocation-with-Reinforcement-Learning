@@ -274,7 +274,29 @@ Figure 65 shows that with a max return reward function ***λ = 1***, the Actor-C
 
 ## Statistics
 
+Now that we have shown the results of our dataset, we will be evaluating the statistical components of our dataset. The statistical components will be based on the mentioned performance metrics and observed statistics. To generate our statistical components we will be using the public library of QuantStats.[2]
 
+#### Real World Dataset Statistics
+
+In Figures 67 and 68, respectively, we evaluate each ETF's statistical components for the training dataset (February 2019 to February 2020) and the testing dataset (March 2020 to November 2020).
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_67.png)
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_68.png)
+
+#### Statistics on Models
+
+In Figures 69 and 70, respectively, we have computed the statistical components from the two asset MTUM-EFAV portfolio algorithm results of using both the training data sets and testing data sets.
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_69.png)
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_70.png)
+
+In Figures 71 and 72, respectively, we have computed the statistical components from the full portfolio algorithm results of using both the training data sets and testing data sets.
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_71.png)
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_72.png)
 
 
 [1] Reward function could also be parametrized as <img src="https://render.githubusercontent.com/render/math?math=R_t = \lambda\Delta\Pi_t -(1-\lambda) a_t^T\Sigma a_t">. In this case caution needs to be taken in scaling the covariance matrix.
