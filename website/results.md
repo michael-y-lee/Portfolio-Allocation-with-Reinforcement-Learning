@@ -11,8 +11,11 @@ nav_include: 5
 <br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#statistics"> Statistics </a>
 
 [Control Dataset](#control-dataset)
+
 [Real Dataset - Two Asset Portfolio](#real-dataset---two-asset-portfolio)
+
 [Real Dataset - Full Portfolio](#real-dataset---full-portfolio)
+
 [Statistics](#statistics)
 
 
