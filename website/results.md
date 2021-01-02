@@ -5,11 +5,6 @@ nav_include: 5
 ---
 
 ## Overview
-<br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#control-dataset"> Control Dataset </a>
-<br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#real-dataset---two-asset-portfolio"> Real Dataset - Two Asset Portfolio </a>
-<br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#real-dataset---full-portfolio"> Real Dataset - Full Portfolio </a>
-<br /> <a href="https://github.com/nikatpatel/epsilon-greedy-quants/blob/main/website/results.md#statistics"> Statistics </a>
-
 [Control Dataset](#control-dataset)
 
 [Real Dataset - Two Asset Portfolio](#real-dataset---two-asset-portfolio)
@@ -20,8 +15,6 @@ nav_include: 5
 
 
 ## Control Dataset
-
-We tested all our models on a simulation of a 2-asset environment. The results were consistent across different levels of **μ** and **σ**. Below is an example of the model convergence using a predefined choice of parameters and for each of the previously discussed reward functions 
 
 We tested all our models on a simulated 2-asset environment with a one-step reward defined as follows: on each observation the agent receives a reward ***R_t***. [1]
 
@@ -37,33 +30,72 @@ Where:
 
 <img src="https://render.githubusercontent.com/render/math?math=\lambda="> risk aversion parameter
 
+
+The risk aversion parameter can be adjusted in order to account for the trade-off between risk and reward.  Setting ***λ = 0*** would represent in a minimum volatility reward function, while setting ***λ = 1*** would represent a maximum return reward function.
+ 
 The results were consistent across different levels of ***μ*** and ***σ***. Below is an example of the model convergence using a predefined choice of parameters and for each of the previously discussed reward functions.
+
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/model_convergence_reward_functions.png "model_convergence_reward_functions")
 
-
-Below we present the average weights per epoch at different levels of risk aversion ***λ***. As expected, we can see that when ***lim<sub>*λ* → ∞</sub>*** the weights converge to 100% investment in the asset with less volatility (Asset 0) and for the cases when and when ***λ*** = 0 the weights converge to 100% in the asset with higher return (Asset 1).
+Below we present the average weights per epoch at different levels of risk aversion ***λ***. As expected, we can see that when  ***λ = 0*** (minimum volatility case) the weights converge to 100% investment in the asset with less volatility (Asset 0) and for the cases when and when ***λ = 1*** (maximum return case) the weights converge to 100% in the asset with higher return (Asset 1).
 
 
 #### Models Convergence
 
-![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/model_convergence_1_new.png)
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figures_11_12.png)
 
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/model_convergence_2_new.png)
-
-
-
-## Real Dataset - Two Asset Portfolio
-## Real Dataset - Full Portfolio
-## Statistics
-
-
+![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figures_13_16.png)
 
 
 
 ## Real Dataset
+Now that we have successfully demonstrated the operation of the Policy Gradient Methods with our control dataset, we then test the following Policy Gradient Methods on real-world data: REINFORCE, REINFORCE with Baseline, Actor-Critic, and Actor-Critic with Eligibility traces.
 
-Now that we have successfully demonstrated the operation of the Policy Gradient Methods with our control dataset, we then test the following Policy Gradient Methods on real-world data: REINFORCE, REINFORCE with Baseline, ActorCritic, and Actor-Critic with Eligibility traces.
+## Real Dataset - Two Asset Portfolio
+
+We begin our evaluation of the real-world data by testing the PG Methods on a two asset portfolio containing MTUM (the higher return asset) and EFAV (the lower volatility asset) to check for model convergence and correct operation.  For each algorithm, we train our models for five different cases of ***λ***: 0, 0.2, 0.5, 0.8, and 1 to see how these algorithms select a portfolio which balances between different levels of risk and reward.  We discuss our findings for the ***λ = 0*** (minimum volatility) and ***λ = 1*** (maximum return) cases in this section.  Please refer to Appendix B, Section 8.2 for the results of the ***λ*** = 0.2, 0.5, and 0.8 cases.
+
+#### REINFORCE 
+
+##### ***λ = 0*** Case (Minimum Volatility)
+
+Figure 17 shows how the REINFORCE algorithm selects a portfolio with low volatility (identified in blue) for a risk aversion parameter ***λ = 0***.  This is expected since ***λ = 0*** represents the minimum volatility portfolio. The stable evolution of backtests over the epoch training demonstrate that the model has converged on an optimal solution.  Comparing our training backtest to the benchmark portfolios, the backtest shows that the portfolio selected by REINFORCE has a volatility (3.53%) which is lower than the minimum volatility benchmark's volatility (3.95%).
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_17.png)
+
+Figure 18 shows the contribution of the reward and volatility components of the reward function.  The components of the reward function are normalized so that they both have approximately the same magnitude at the start of the model training. Since ***λ = 0***, the reward function in our case is represented as <img src="https://render.githubusercontent.com/render/math?math=R_t=-a_t^T{\sigma}a_t"> (negative magnitude of the volatility component).
+
+Figure 19 shows the asset weight distribution over the model training.  The model converges on the correct solution for a minimum volatility reward function with ***λ = 0***, consistently allocating 100% of the portfolio in EFAV (the lower volatility asset) after 2500 epochs of training.
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_18_19.png)
+
+Using the asset weights from the training period, we perform a backtest on the test dataset and compare the backtest return to the benchmarks as seen in Figure 20.  We see that the backtest has a volatility (4.1%) lower than the benchmark minimum volatility case (4.23%).  This demonstrates that our REINFORCE model is performing as expected to find the minimum volatility portfolio for a two asset portfolio.
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_20.png)
+
+##### ***λ = 1*** Case (Maximum Return)
+
+In Figure 21, we demonstrate the operation of the REINFORCE algorithm using a risk aversion parameter of ***λ = 1***.  This represents the maximum return reward function, and the backtest of the training data shows that the return we obtained is the maximum return (24.03%), exceeding the returns of maximum return benchmark portfolio (18.21% return).  We also note that the model has converged during model training, as evidenced by the consistent backtest results across the last few sets of training epochs.
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_21.png)
+
+Figure 22 shows the contribution of the reward and volatility components of the reward function. Since ***λ = 1***, the reward function in our case is represented as <img src="https://render.githubusercontent.com/render/math?math=R_t=\Delta\Pi_t"> (the return component) without any contribution from the volatility component.
+
+Figure 23 shows the asset weight distribution over the model training.  The model converges on the correct solution, consistently allocating 100% of the portfolio in MTUM (the higher return asset) after approximately 1300 epochs of training. 
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_22_23.png)
+
+In Figure 24, we perform a backtest on the test dataset and note that it has a higher return (54.08%) then the three benchmarks.  This demonstrates that our REINFORCE model can return a maximum return portfolio with two assets on a test dataset it has not been trained on.  We also note that the volatility of our test backtest is 13.06%, so the maximum return does come at the expense of a higher volatility.  
+
+![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_24.png)
+
+
+## Real Dataset - Full Portfolio
+## Statistics
+
+## Real Dataset
+
 
 We begin by dividing the ETF price history into two datasets, the training set which includes ETF price history from January 2017 to March 2020, and a test dataset with ETF price history from April 2020 to November 2020. The series are de-meaned and we run two cases at different levels of risk aversion ***λ***, 0 and 10. In Figures 11-14, we see that with a risk aversion ***λ***=0, we did not reach convergence in any of the PG Methods. This is further evidenced by having a relatively equal asset weight distribution as seen in Figures 15-18. 
 
