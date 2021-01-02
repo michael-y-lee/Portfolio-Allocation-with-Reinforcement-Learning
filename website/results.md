@@ -9,6 +9,12 @@ nav_include: 5
 
 [Real Dataset - Two Asset Portfolio](#real-dataset---two-asset-portfolio)
 
+- [REINFORCE](#reinforce)
+- [REINFORCE with Baseline](#reinforce-with-baseline)
+- [Actor Critic](#actor-critic)
+- [Actor Critic with Eligibility Traces](#actor-critic-with-eligibility-traces)
+
+
 [Real Dataset - Full Portfolio](#real-dataset---full-portfolio)
 
 [Statistics](#statistics)
@@ -143,40 +149,6 @@ Figure 35 shows that with a max return reward function ***λ = 1***, the Actor-C
 
 ## Real Dataset - Full Portfolio
 ## Statistics
-
-
-DELETE FROM HERE ...
-
-Now that we have shown the results of our dataset, we will be evaluating the statistical components of our dataset. The statistical components will be based on the performance metrics described earlier. To generate our statistical components we will be using the public library of QuantStats.[2]
-
-
-#### Real World Dataset Statistics
-In the following figure, we evaluate each ETF's statistical components from January 2017 to November 2020. 
-
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/Real_Dataset_Statistics.png)
-
-### Backtest Statistics
-
-#### Backtest with Risk Aversion Factor 0
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/BackTest_RiskAversion0_Statistics.png)
-
-#### Backtest with Risk Aversion Factor 10
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/BackTest_RiskAversion1000_Statistics.png)
-
-### Rolling Sharpe Ratio
-
-In the following figures, we can observe the rolling Sharpe Ratios of each respective model. The rolling Sharpe Ratio is useful to analyze the historical performance of a fund since it gives investors insights to the performance of the strategy.
-
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/rolling_sharpe_reinforce.png)
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/rolling_sharpe_reinforce_baseline.png)
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/rolling_sharpe_ac_no_trace.png)
-![Figure 6](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/rolling_sharpe_ac_trace.png)
-
-
-
-
-
-
 
 
 
