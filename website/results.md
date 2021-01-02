@@ -8,7 +8,6 @@ nav_include: 5
 [Control Dataset](#control-dataset)
 
 [Real Dataset - Two Asset Portfolio](#real-dataset---two-asset-portfolio)
-
 - [REINFORCE](#reinforce)
 - [REINFORCE with Baseline](#reinforce-with-baseline)
 - [Actor Critic](#actor-critic)
@@ -16,6 +15,11 @@ nav_include: 5
 
 
 [Real Dataset - Full Portfolio](#real-dataset---full-portfolio)
+- [REINFORCE](#reinforce)
+- [REINFORCE with Baseline](#reinforce-with-baseline)
+- [Actor Critic](#actor-critic)
+- [Actor Critic with Eligibility Traces](#actor-critic-with-eligibility-traces)
+
 
 [Statistics](#statistics)
 
@@ -148,6 +152,23 @@ Figure 35 shows that with a max return reward function ***λ = 1***, the Actor-C
 
 
 ## Real Dataset - Full Portfolio
+
+#### REINFORCE
+##### ***λ = 0*** Case (Minimum Volatility)
+##### ***λ = 1*** Case (Maximum Return)
+
+#### REINFORCE with Baseline
+##### ***λ = 0*** Case (Minimum Volatility)
+##### ***λ = 1*** Case (Maximum Return)
+
+#### Actor Critic
+##### ***λ = 0*** Case (Minimum Volatility)
+##### ***λ = 1*** Case (Maximum Return)
+
+#### Actor Critic with Eligibility Traces
+##### ***λ = 0*** Case (Minimum Volatility)
+##### ***λ = 1*** Case (Maximum Return)
+
 ## Statistics
 
 
