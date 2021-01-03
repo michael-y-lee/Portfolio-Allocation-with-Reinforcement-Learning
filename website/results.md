@@ -64,7 +64,7 @@ Now that we have successfully demonstrated the operation of the Policy Gradient 
 
 ## Real Dataset - Two Asset Portfolio
 
-We begin our evaluation of the real-world data by testing the PG Methods on a two asset portfolio containing MTUM (the higher return asset) and EFAV (the lower volatility asset) to check for model convergence and correct operation.  For each algorithm, we train our models for five different cases of ***λ***: 0, 0.2, 0.5, 0.8, and 1 to see how these algorithms select a portfolio which balances between different levels of risk and reward.  We discuss our findings for the ***λ = 0*** (minimum volatility) and ***λ = 1*** (maximum return) cases in this section.  Please refer to Appendix B, Section 8.2 for the results of the ***λ*** = 0.2, 0.5, and 0.8 cases.
+We begin our evaluation of the real-world data by testing the PG Methods on a two asset portfolio containing MTUM (the higher return asset) and EFAV (the lower volatility asset) to check for model convergence and correct operation.  For each algorithm, we train our models for five different cases of ***λ***: 0, 0.2, 0.5, 0.8, and 1 to see how these algorithms select a portfolio which balances between different levels of risk and reward.  We discuss our findings for the ***λ = 0*** (minimum volatility) and ***λ = 1*** (maximum return) cases as well as the impact of ***λ*** in asset allocation in this section.  Please refer to Appendix B, Section 8.2 for the results of the ***λ*** = 0.2, 0.5, and 0.8 cases.
 
 #### Two Asset Portfolio REINFORCE 
 
@@ -99,6 +99,18 @@ Figure 23 shows the asset weight distribution over the model training.  The mode
 In Figure 24, we perform a backtest on the test dataset and note that it has a higher return (54.08%) then the three benchmarks.  This demonstrates that our REINFORCE model can return a maximum return portfolio with two assets on a test dataset it has not been trained on.  We also note that the volatility of our test backtest is 13.06%, so the maximum return does come at the expense of a higher volatility.  
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_24.png)
+
+
+Asset Allocation based on ***λ***
+
+In Figure 19 and Figure 23, we show the evolution of the asset weights over the course of the model training based on the ***λ = 0*** and ***λ = 1*** cases.  In Appendix B, Section 8.2 we show the evolution of the asset weights for the ***λ = 0.2*** (Figure 105), ***λ = 0.5*** (Figure 121) and ***λ = 0.8*** (Figure 137) cases.  For ***λ = 0.2***, the REINFORCE algorithm converges and picks EFAV, the lower volatility asset.  This is expected as the volatility component is favored over the reward component.
+
+However, for ***λ = 0.5*** the REINFORCE algorithm alternates between choosing EFAV or MTUM, or a portion of the two assets.  This reflects the algorithm's balance between the return and volatility components and since those two components of the reward function have an equal weight, neither component is heavily favored.
+
+For the ***λ = 0.8*** case, the algorithm alternates between choosing EVAV or MTUM but eventually settles on choosing MTUM, the higher return asset.  The algorithm considers both the reward and volatility components, but ultimately the reward component is weighted more so it chooses the higher return asset. 
+
+Based on these results with the two asset portfolio, it appears that setting a ***λ*** value greater than 0 and less than 0.5 would ultimately result in a minimum volatility portfolio, while setting ***λ*** greater than 0.5 and less than 1 would eventually result in a maximum return portfolio.  At ***λ = 0.5***, the REINFORCE algorithm is continuously trying to balance between risk and reward and as a result, the asset weights are not stable over the training period.
+
 
 #### Two Asset Portfolio REINFORCE with Baseline 
 
@@ -210,6 +222,15 @@ Figure 47 shows the asset weight distribution over the model training.  The mode
 In Figure 48, we perform a backtest on the test dataset and note that it has a higher return (30.84%) then the maximum return benchmark portfolio (20.9% return).  This demonstrates that our REINFORCE model can return a maximum return portfolio given a portfolio of ETFs.  
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_48.png)
+
+Asset Allocation based on ***λ***
+
+In Figure 39, Figure 43, and Figure 47, we discussed the asset weights the REINFORCE algorithm allocated for the ***λ = 0***, ***λ = 0.5***, and ***λ = 1*** cases respectively.  In Appendix B, Section 8.3 we show the asset weights for the ***λ = 0.2*** and ***λ = 0.8*** cases.  For ***λ = 0.2*** (Figure 164), the reward function favors minimizing the volatility component over maximizing the reward component.  The REINFORCE algorithm's asset allocation evolves over the course of the training period, but eventually converges on allocating the full portfolio in EEMV, which has the lowest volatility of all the ETFs in the portfolio. 
+
+For the ***λ = 0.8*** case (Figure 186), the algorithm alternates between choosing MTUM, USMV, or QUAL and ultimately ends with choosing USMV. These three ETFs are the top three ETFs in our portfolio for having the highest returns in the training period.  As the return component of the reward function is favored over the volatility component in the ***λ = 0.8*** case, it makes sense that the REINFORCE algorithm is allocating the higher return assets in the portfolio.
+
+Based on these results with the full portfolio of ETFs, it appears that setting a ***λ*** value greater than 0 and less than 0.5 would result in a minimum volatility portfolio, while setting ***λ*** greater than 0.5 and less than 1 would result in a maximum return portfolio.  At ***λ = 0.5***, although there is a balance between risk and reward, in the full portfolio scenario it appears that the REINFORCE algorithm selects a higher return asset, at the expense of a higher volatility.  This is a finding different from the two-asset portfolio with ***λ = 0.5***, where there was no clear preference between the maximum return asset and the minimum volatility asset.
+
 
 #### Full Portfolio REINFORCE with Baseline
 
