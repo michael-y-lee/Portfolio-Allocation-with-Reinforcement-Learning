@@ -86,7 +86,7 @@ Using the asset weights from the training period, we perform a backtest on the t
 
 ##### ***λ = 1*** Case (Maximum Return)
 
-In Figure 21, we demonstrate the operation of the REINFORCE algorithm using a risk aversion parameter of ***λ = 1***.  This represents the maximum return reward function, and the backtest of the training data shows that the return we obtained is the maximum return (24.03%), exceeding the returns of maximum return benchmark portfolio (18.21% return).  We also note that the model has converged during model training, as evidenced by the consistent backtest results across the last few sets of training epochs.
+In Figure 21, we demonstrate the operation of the REINFORCE algorithm using a risk aversion parameter of ***λ = 1***.  This represents the maximum return reward function, and the backtest of the training data shows that the return we obtained is the maximum return (24.09%), exceeding the returns of maximum return benchmark portfolio (18.21% return).  We also note that the model has converged during model training, as evidenced by the consistent backtest results across the last few sets of training epochs.
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_21.png)
 
@@ -96,7 +96,7 @@ Figure 23 shows the asset weight distribution over the model training.  The mode
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_22_23.png)
 
-In Figure 24, we perform a backtest on the test dataset and note that it has a higher return (54.08%) then the three benchmarks.  This demonstrates that our REINFORCE model can return a maximum return portfolio with two assets on a test dataset it has not been trained on.  We also note that the volatility of our test backtest is 13.06%, so the maximum return does come at the expense of a higher volatility.  
+In Figure 24, we perform a backtest on the test dataset and note that it has a higher return (54.08%) then the maximum return benchmark's return (32.67%).  This demonstrates that our REINFORCE model can return a maximum return portfolio with two assets on a test dataset it has not been trained on.  We also note that the volatility of our test backtest is 13.06%, so the maximum return does come at the expense of a higher volatility.  
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_24.png)
 
@@ -116,11 +116,9 @@ Based on these results with the two asset portfolio, it appears that setting a *
 
 ##### ***λ = 0*** Case (Minimum Volatility)
 
-In Figure 25, the REINFORCE with Baseline algorithm selects a low volatility portfolio (3.53%) for a risk aversion parameter ***λ = 0*** during model training.  Although there is some variation in the backtests at the start of the model training (as evidenced by the light blue backtest returns in the plot), the subsequent backtests with the dark blue backtests are fairly stable and consistent.  
+In Figure 25, the REINFORCE with Baseline algorithm selects a low volatility portfolio (3.53%) for a risk aversion parameter ***λ = 0***. This is lower than the minimum volatility benchmark's voltility rate (3.95%).  Although there is some variation in the backtests at the start of the model training (as evidenced by the light blue backtest returns in the plot), the subsequent backtests indicated by the dark blue lines are fairly stable and consistent.  Figure 26 shows that the backtest of the test dataset has a volatility of 4.11%, which is below the benchmark minimum volatility portfolio's volatility of 4.23%.  Please refer to Appendix B, Section 8.2 for the reward function and the asset weight plots. 
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_25.png)
-
-Figure 26 shows that the backtest of the test dataset has a volatility of 4.11%, which is below the benchmark minimum volatility portfolio's volatility of 4.23%.  Please refer to Appendix B, Section 8.2 for the reward function and the asset weight plots.
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_26.png)
 
@@ -236,7 +234,7 @@ Based on these results with the full portfolio of ETFs, it appears that setting 
 
 ##### ***λ = 0*** Case (Minimum Volatility)
 
-In Figure 49, the REINFORCE with Baseline algorithm selects a low volatility portfolio (3.52%) for a risk aversion parameter ***λ = 0*** during model training (this is a lower volatility then the minimum volatility benchmark portfolio's volatility).  With the exception of one epoch training result, the other backtest returns are fairly stable.  Figure 50 shows that the REINFORCE with baseline algorithm selects the minimum volatility portfolio for the test dataset (the backtest has a volatility of 4.29%, which is below the benchmark minimum volatility portfolio's volatility of 4.39%).  Please refer to Appendix B, Section 8.3 for the reward function and the asset weight plots.
+In Figure 49, the REINFORCE with Baseline algorithm selects a low volatility portfolio (3.52%) for a risk aversion parameter ***λ = 0*** during model training (this is a lower volatility then the minimum volatility benchmark portfolio's volatility of 4.62%).  With the exception of one epoch training result, the other backtest returns are fairly stable.  Figure 50 shows that the REINFORCE with baseline algorithm selects the minimum volatility portfolio for the test dataset (the backtest has a volatility of 4.29%, which is below the benchmark minimum volatility portfolio's volatility of 4.39%).  Please refer to Appendix B, Section 8.3 for the reward function and the asset weight plots.
 
 ![Figure 5](https://raw.githubusercontent.com/nikatpatel/epsilon-greedy-quants/main/_assets/figure_49_50.png)
 
