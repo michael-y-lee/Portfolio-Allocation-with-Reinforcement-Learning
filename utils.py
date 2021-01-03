@@ -1,13 +1,17 @@
+import datetime
+import inspect
+import numpy as np
 import os
 import pandas as pd
-import numpy as np
-from sklearn.pipeline import make_pipeline
-import datetime
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-from timeseriescv.cross_validation import CombPurgedKFoldCV
 import talib
-import inspect
+from sklearn import preprocessing
+from sklearn.decomposition import PCA
+from sklearn.linear_model import LinearRegression
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import PolynomialFeatures
+from sklearn.preprocessing import StandardScaler
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
+from timeseriescv.cross_validation import CombPurgedKFoldCV
 
 
 def get_return_in_period(serie, origin_time_delta, finish_time_delta, forward_limit_time_delta,
@@ -85,12 +89,14 @@ class DailyDataFrame2Features:
         for asset_name, bars_time_serie_df in bars_dict.items():
             features_instance = DailySeries2Features(bars_time_serie_df, features_list, exclude_features,
                                                      forward_returns_time_delta)
+
             technical_features = features_instance.technical_features.copy()
             technical_features.columns = [asset_name + "_" + i for i in technical_features.columns]
             all_features = pd.concat([all_features, technical_features], axis=1)
 
         # we drop N/A because there are no features available on certains dates like moving averages
         self.all_features = all_features.dropna()
+
 
         # set forward returns
         if forward_returns_time_delta is not None:
@@ -113,7 +119,7 @@ class DailyDataFrame2Features:
         assert n_lags >=1
         for lag in range(n_lags):
             shifted_df=original_features.shift(lag+1)
-            shifted_df.columns=[i+"_lag_"+str(lag) for i in shifted_df.columns]
+            shifted_df.columns=[i+"_lag_"+str(lag+1) for i in shifted_df.columns]
             new_features=pd.concat([new_features,shifted_df],axis=1)
 
         return new_features
@@ -308,7 +314,9 @@ class DailySeries2Features:
         :param serie:
         :return:
         """
+
         feature = self.log_prices.copy().diff()
+
         return feature
 
     def _add_12m1_past_return(self, serie):
@@ -361,6 +369,44 @@ class DailySeries2Features:
         forward_limit_time_delta = datetime.timedelta(days=0)
         technical = get_return_in_period(serie, origin_time_delta, finish_time_delta, forward_limit_time_delta)
 
+        return technical
+
+    def _add_detrend(self, serie):
+        """
+        detrend the asset prices and scale
+        :param data_frame:
+        :return:
+        """
+        holtwinters = ExponentialSmoothing(serie, trend="add", seasonal=None)
+        fit = holtwinters.fit(optimized=True, remove_bias=True, smoothing_level=0.1, smoothing_trend=0.1)
+
+        hw_trend = np.array(fit._results.trend).reshape(-1, 1)
+        hw_level = np.array(fit._results.level).reshape(-1, 1)
+        hw_resid = np.array(fit._results.resid).reshape(-1, 1)
+
+        trend_scaler = preprocessing.MinMaxScaler().fit(hw_trend)
+        trend_scaled = pd.Series(trend_scaler.transform(hw_trend).flatten())
+
+        level_scaler = preprocessing.MinMaxScaler().fit(hw_level)
+        level_scaled = pd.Series(level_scaler.transform(hw_level).flatten())
+
+        resid_scaler = preprocessing.MinMaxScaler().fit(hw_resid)
+        resid_scaled = pd.Series(resid_scaler.transform(hw_resid).flatten())
+
+        demeaned_resid = fit._results.resid - np.mean(fit._results.resid)
+        demeaned_return = np.diff(demeaned_resid, prepend=demeaned_resid[0]).reshape(-1, 1)
+
+        demeaned_return_scaler = preprocessing.MinMaxScaler().fit(demeaned_return)
+        demeaned_return_scaled = pd.Series(demeaned_return_scaler.transform(demeaned_return).flatten())
+
+        volatility_resid =pd.Series(fit._results.resid).ewm(alpha=self.EWMA_VOL_ALPHA, min_periods=14).var().values.reshape(-1, 1)
+        volatility_resid_scaler = preprocessing.MinMaxScaler().fit(volatility_resid)
+        volatility_resid_scaled = pd.Series(volatility_resid_scaler.transform(volatility_resid).flatten())
+
+        technical = pd.concat([trend_scaled, level_scaled, resid_scaled, demeaned_return_scaled, volatility_resid_scaled], axis=1)
+
+        technical.columns = ["hw_trend", "hw_level", "hw_resid", "hw_demeaned_return", "hw_volatility"]
+        technical.index = serie.index
         return technical
 
 

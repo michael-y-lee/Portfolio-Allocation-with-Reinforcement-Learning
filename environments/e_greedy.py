@@ -1,11 +1,14 @@
+import datetime
 import gym
-import pandas as pd
 import numpy as np
 import os
-import datetime
-from tqdm import tqdm
-from lib.Benchmarks import SimulatedAsset
+import pandas as pd
 import quantstats as qs
+from tqdm import tqdm
+
+from lib.Benchmarks import RollingPortfolios
+from lib.Benchmarks import SimulatedAsset
+
 qs.extend_pandas()
 import matplotlib.pyplot as plt
 import copy
@@ -16,6 +19,8 @@ from utils import DailyDataFrame2Features
 import torch
 import torch.nn.functional as F
 import math
+from functools import partial
+tqdm = partial(tqdm, position=0, leave=True)
 
 class RewardFactory:
 
@@ -28,6 +33,8 @@ class RewardFactory:
         self.percent_commission=percent_commission
         self.risk_aversion=risk_aversion
         self.ext_covariance=ext_covariance
+        self.reward_R = 0
+        self.reward_vol = 0
 
         self.calculate_smooth_covariance(forward_returns_df=forward_returns_df)
 
@@ -99,7 +106,11 @@ class RewardFactory:
         :param portfolio_returns:
         :return:
         """
-        return self.risk_aversion*portfolio_returns.iloc[-1] - (1-self.risk_aversion)*action_variance
+        norm_R=5 # normalization constants set so reward and vol components are approximately equivalent in risk_aversion = 0.5 case
+        norm_vol=75
+        self.reward_R = norm_R*portfolio_returns.iloc[-1]
+        self.reward_vol = norm_vol*action_variance
+        return self.risk_aversion*norm_R*portfolio_returns.iloc[-1] - (1-self.risk_aversion)*norm_vol*action_variance
 
     def _reward_min_variance(self,portfolio_returns):
         """
@@ -152,6 +163,7 @@ class State:
         self.include_previous_weights=include_previous_weights
         self.forward_returns_dates=forward_returns_dates
         self.in_bars_count=in_bars_count
+        self.risk_aversion = risk_aversion
         self._set_helper_functions()
         self._set_objective_function_parameters(objective_parameters)
 
@@ -332,13 +344,15 @@ class State:
                                               forward_returns=self.forward_returns,
                                               action_date_index=action_date_index,
                                               reward_function=reward_function)
+        reward_R = self.reward_factory.reward_R
+        reward_vol = self.reward_factory.reward_vol
 
         #reward factory
         done = False
         extra_info = {"action_date":action_date,
             "reward_function":reward_function,
                     "previous_weights":self.weight_buffer.iloc[action_date_index - 1]}
-        return next_observation_date,reward,done,extra_info
+        return next_observation_date,reward,done,extra_info, reward_R, reward_vol
 
     def encode(self, date):
         """
@@ -390,7 +404,7 @@ class DeepTradingEnvironment(gym.Env):
     metadata = {'render.modes': ['human']}
 
     @staticmethod
-    def _build_and_persist_features(assets_dict, out_reward_window,in_bars_count,data_hash):
+    def _build_and_persist_features(assets_dict, out_reward_window,in_bars_count,data_hash, detrend=False):
         """
          builds close-to-close returns for a specified asset dataset
         :param assets_dict:
@@ -400,31 +414,47 @@ class DeepTradingEnvironment(gym.Env):
         :return:
         """
         PERSISTED_DATA_DIRECTORY = "temp_persisted_data"
-        if not os.path.exists(PERSISTED_DATA_DIRECTORY + "/only_features_"+data_hash):
-            features_instance=DailyDataFrame2Features(bars_dict=assets_dict
-                                                      ,configuration_dict={},
-                                                      forward_returns_time_delta=[out_reward_window])
+        # if not os.path.exists(PERSISTED_DATA_DIRECTORY + "/only_features_"+data_hash):
+        features_instance=DailyDataFrame2Features(bars_dict=assets_dict
+                                                  ,configuration_dict={},
+                                                  forward_returns_time_delta=[out_reward_window])
 
-            features=features_instance.all_features
+        features=features_instance.all_features
 
-            only_features, only_forward_returns =features_instance.separate_features_from_forward_returns(features=features)
-            forward_returns_dates = features_instance.forward_returns_dates
+        only_features, only_forward_returns =features_instance.separate_features_from_forward_returns(features=features)
+        forward_returns_dates = features_instance.forward_returns_dates
+
+        if detrend == True:
+            detrend = only_features[[col for col in only_features.columns if "hw" in col]]
             only_features=only_features[[col for col in only_features.columns if "log_return" in col]]
-            #get the lagged returns as features
+            only_features = pd.concat([only_features, detrend], axis=1)
+            #get the lagged features
             only_features=features_instance.add_lags_to_features(only_features,n_lags=in_bars_count)
-            only_features=only_features.dropna()
-            only_forward_returns=only_forward_returns.reindex(only_features.index)
-            forward_returns_dates=forward_returns_dates.reindex(only_features.index)
-
-            only_features.to_parquet(PERSISTED_DATA_DIRECTORY + "/only_features_" + data_hash)
-            only_forward_returns.to_parquet(PERSISTED_DATA_DIRECTORY + "/only_forward_returns_" + data_hash)
-            forward_returns_dates.to_parquet(PERSISTED_DATA_DIRECTORY + "/forward_return_dates_" + data_hash)
 
         else:
+            only_features=only_features[[col for col in only_features.columns if "log_return" in col]]
+            #get the lagged features
+            only_features=features_instance.add_lags_to_features(only_features,n_lags=in_bars_count)
 
-            only_features = pd.read_parquet(PERSISTED_DATA_DIRECTORY + "/only_features_"+data_hash)
-            only_forward_returns=pd.read_parquet(PERSISTED_DATA_DIRECTORY + "/only_forward_returns_"+data_hash)
-            forward_returns_dates=pd.read_parquet(PERSISTED_DATA_DIRECTORY + "/forward_return_dates_" + data_hash)
+
+        only_features=only_features.dropna()
+
+
+        # add bias to features
+        only_features["bias"] = 1
+
+        only_forward_returns=only_forward_returns.reindex(only_features.index)
+        forward_returns_dates=forward_returns_dates.reindex(only_features.index)
+
+        only_features.to_parquet(PERSISTED_DATA_DIRECTORY + "/only_features_" + data_hash)
+        only_forward_returns.to_parquet(PERSISTED_DATA_DIRECTORY + "/only_forward_returns_" + data_hash)
+        forward_returns_dates.to_parquet(PERSISTED_DATA_DIRECTORY + "/forward_return_dates_" + data_hash)
+
+        # else:
+        #
+        #     only_features = pd.read_parquet(PERSISTED_DATA_DIRECTORY + "/only_features_"+data_hash)
+        #     only_forward_returns=pd.read_parquet(PERSISTED_DATA_DIRECTORY + "/only_forward_returns_"+data_hash)
+        #     forward_returns_dates=pd.read_parquet(PERSISTED_DATA_DIRECTORY + "/forward_return_dates_" + data_hash)
 
         return only_features, only_forward_returns,forward_returns_dates
 
@@ -453,9 +483,9 @@ class DeepTradingEnvironment(gym.Env):
         assets_dict={col :asset_prices[col] for col in asset_prices.columns}
 
         return cls._create_environment_from_assets_dict(assets_dict=assets_dict,data_hash=data_hash,
-                                                         meta_parameters=meta_parameters,objective_parameters=objective_parameters)
+                                                         meta_parameters=meta_parameters,objective_parameters=objective_parameters, detrend=False)
     @classmethod
-    def _create_environment_from_assets_dict(cls,assets_dict,meta_parameters,objective_parameters,data_hash,*args,**kwargs):
+    def _create_environment_from_assets_dict(cls,assets_dict,meta_parameters,objective_parameters,data_hash,detrend, *args,**kwargs):
         """
         creates an environment from a dictionary of asset data
         :param assets_prices:  (pandas.DataFrame)
@@ -466,17 +496,17 @@ class DeepTradingEnvironment(gym.Env):
         features, forward_returns,forward_returns_dates = cls._build_and_persist_features(assets_dict=assets_dict,
                                                                     in_bars_count=meta_parameters["in_bars_count"],
                                              out_reward_window=meta_parameters["out_reward_window"],
-                                             data_hash=data_hash)
+                                             data_hash=data_hash, detrend=detrend)
 
-        # add bias to features
-        features["bias"]=1
+        # # add bias to features
+        # features["bias"]=1
 
         return DeepTradingEnvironment(features=features,forward_returns_dates=forward_returns_dates,
                                forward_returns=forward_returns, meta_parameters=meta_parameters,
                                objective_parameters=objective_parameters)
 
     @classmethod
-    def build_environment_from_dirs_and_transform(cls, meta_parameters, objective_parameters,data_hash, data_dir="data_env", **kwargs):
+    def build_environment_from_dirs_and_transform(cls, meta_parameters, objective_parameters,data_hash, data_dir="data_env", detrend=False, **kwargs):
         """
         Do transformations that shouldn't be part of the class
         Also uses the meta parameters
@@ -498,7 +528,7 @@ class DeepTradingEnvironment(gym.Env):
             assets_dict[key]=tmp_df
 
         environment=cls._create_environment_from_assets_dict(assets_dict=assets_dict,data_hash=data_hash,
-                                                              meta_parameters=meta_parameters,objective_parameters=objective_parameters)
+                                                              meta_parameters=meta_parameters,objective_parameters=objective_parameters, detrend=detrend)
         return environment
 
     def __init__(self, features, forward_returns,forward_returns_dates, objective_parameters,
@@ -583,14 +613,14 @@ class DeepTradingEnvironment(gym.Env):
         """
 
         action = action_portfolio_weights
-        observation,reward,done,extra_info= self.state.step(action=action,
+        observation,reward,done,extra_info, reward_R, reward_vol= self.state.step(action=action,
                                                             action_date=action_date,
                                                             reward_function=reward_function,
                                                             pre_indices=pre_indices)
         # obs = self._state.encode()
         obs=observation
         info=extra_info
-        return obs, reward, done, info
+        return obs, reward, done, info, reward_R, reward_vol
 
     def render(self, mode='human', close=False):
         pass
@@ -625,7 +655,7 @@ class AgentDataBase:
         self.number_of_assets = self.environment.number_of_assets
         self.state_dimension = self.environment.state.state_dimension
 
-    def backtest_policy(self,epoch,backtest, env_test=None, test_input=None):
+    def backtest_policy(self,epoch,backtest, env_test=None, train_input=None, test_input=None):
         """
         Performs a backtest based on the environment's policy
         :return:
@@ -633,6 +663,9 @@ class AgentDataBase:
         # used for calculating backtest within the same environment
         if env_test==None:
             # try/except clause used to account for difference in datetime formats
+            train_input_returns = train_input.to_returns().dropna()
+            train_input_returns = train_input_returns.loc[(train_input_returns != 0).any(1)]
+
             try:
                 activate_date=pd.Timestamp(self.environment.features.index[0])
                 tmp_weights = self.environment.state.weight_buffer.copy()
@@ -666,13 +699,15 @@ class AgentDataBase:
 
                     tmp_weights.loc[activate_date:next_observation_date, :] = action
                     activate_date = next_observation_date
+            tmp_weights.columns = train_input_returns.columns
 
-            tmp_backtest = ((self.environment.forward_returns * tmp_weights).sum(axis=1) + 1).cumprod()
+            tmp_backtest = ((train_input_returns * tmp_weights).sum(axis=1) + 1).cumprod()
 
         # used for backtest of a test environment using a training environment's policy
         else:
             test_input_returns = test_input.to_returns().dropna()
             test_input_returns = test_input_returns.loc[(test_input_returns != 0).any(1)]
+
             activate_date=test_input.index[0]
             tmp_weights = env_test.state.weight_buffer[1:].copy()
             tmp_weights.columns = test_input_returns.columns
@@ -688,6 +723,7 @@ class AgentDataBase:
                 next_observation_date = env_test.forward_returns_dates.iloc[i][fwd_return_date_name]
 
                 tmp_weights.loc[activate_date:next_observation_date, :] = action
+
                 activate_date = next_observation_date
             tmp_backtest = ((test_input_returns * tmp_weights).sum(axis=1)+1).cumprod()
 
@@ -697,7 +733,7 @@ class AgentDataBase:
         else:
             backtest=pd.concat([backtest,tmp_backtest],axis=1)
 
-        return backtest
+        return backtest, tmp_weights
 
     def _build_full_pre_sampled_indices(self):
         """
@@ -736,15 +772,26 @@ class AgentDataBase:
         :return:
         """
         frd=self.environment.forward_returns_dates
+        # frd.to_csv("dates.csv")
         column_name = frd.columns[0]
         end_date=frd[column_name].max()
 
         for obs in range(self.sample_observations+1):
-            last_date_start = frd[frd[column_name] == end_date].index
+            # find next observation date based on end date of previous observation date.  If observation date not found in index,
+            # search for next date where observation is recorded.
+            try:
+                last_date_start = frd[frd[column_name] == end_date].index
+                assert len(last_date_start) > 0
+            except:
+                end_date = end_date + pd.Timedelta('1 days')
+                last_date_start = frd[frd[column_name] == end_date].index
+                assert len(last_date_start) > 0
+
             last_date_start_index = frd.index.searchsorted(last_date_start)
             end_date = frd.index[last_date_start_index][0]
         self.latest_posible_index_date=last_date_start_index[0]
-        self.max_available_obs_date=frd[column_name].index.max().tz_localize(None) #.tz_localize(None)
+
+        self.max_available_obs_date=frd[column_name].index.max().tz_localize(None)
 
         # presampled indices for environment sample
 
@@ -795,7 +842,7 @@ class AgentDataBase:
                                                           weights_on_date=weights_on_date)
         action_portfolio_weights = self.get_best_action(flat_state=flat_state)
 
-        next_action_date, reward, done, info = self.environment.step(
+        next_action_date, reward, done, info, reward_R, reward_vol = self.environment.step(
             action_portfolio_weights=action_portfolio_weights,reward_function=self.reward_function,
             action_date=action_date,pre_indices=pre_indices)
 
@@ -803,16 +850,17 @@ class AgentDataBase:
 
             print(info)
 
-        return next_action_date,  flat_state ,reward, action_portfolio_weights
+        return next_action_date,  flat_state ,reward, action_portfolio_weights, reward_R, reward_vol
 
     def sample_env_pre_sampled(self,verbose=False):
         # starts in 1 becasue commission depends on initial weights
         start = np.random.choice(range(self.environment.state.in_bars_count + 1, self.latest_posible_index_date))
-        states, actions, rewards = self.sample_env_pre_sampled_from_index(start=start,
+        states, actions, rewards, rewards_R, rewards_vol = self.sample_env_pre_sampled_from_index(start=start,
                                                                             sample_observations=self.sample_observations,
                                                                           pre_sample_date_indices=self.pre_sample_date_indices ,
                                                                           forward_returns_dates=self.environment.forward_returns_dates)
-        return  states, actions, rewards
+        return  states, actions, rewards, rewards_R, rewards_vol
+
     def sample_env_pre_sampled_from_index(self, start, pre_sample_date_indices, sample_observations,
                                           forward_returns_dates, verbose=False):
         """
@@ -825,6 +873,8 @@ class AgentDataBase:
         action_dates = forward_returns_dates.index[dates_indices]
 
         rewards = []
+        rewards_R = []
+        rewards_vol = []
         returns_dates = []
         actions = []
         states = []
@@ -833,7 +883,7 @@ class AgentDataBase:
             action_date = action_dates[counter]
             returns_dates.append(action_date)
 
-            action_date, flat_state, reward, action_portfolio_weights = self._get_sars_by_date(
+            action_date, flat_state, reward, action_portfolio_weights, reward_R, reward_vol = self._get_sars_by_date(
                 action_date=action_date, verbose=False,
                 pre_indices=[dates_indices[counter], dates_indices[counter + 1]])
 
@@ -841,13 +891,15 @@ class AgentDataBase:
             states.append(flat_state)
 
             rewards.append(reward)
+            rewards_R.append(reward_R)
+            rewards_vol.append(reward_vol)
 
             if action_date > self.max_available_obs_date:
                 if verbose:
                     print("Sample reached limit of time series", counter)
                 raise
 
-        return states, actions, rewards
+        return states, actions, rewards, rewards_R, rewards_vol
 
     def set_plot_weights(self,weights,benchmark_G):
 
@@ -874,7 +926,7 @@ class AgentDataBase:
 
             if counter > self.environment.state.in_bars_count:
 
-                next_date, flat_state, reward, action_portfolio_weights = self._get_sars_by_date(
+                next_date, flat_state, reward, action_portfolio_weights, reward_R, reward_vol = self._get_sars_by_date(
                     action_date=action_date, verbose=False)
 
                 states.append(flat_state)
@@ -894,6 +946,52 @@ class LinearAgent(AgentDataBase):
 
         self._initialize_linear_parameters()
 
+        # plot metadata
+        self.tick_size  = 18  # tick size
+        self.label_size = 18  # x, y size
+        self.legend_size = 20 # legend size
+        self.title_size = 22  # title size
+
+
+    def _run_benchmarks(self, portfolio_df, df_start, df_end, benchmark_start):
+        portfolio_df = portfolio_df[df_start:df_end]
+
+        portfolio_returns_df = portfolio_df.to_returns().dropna()
+
+        rp_max_return = RollingPortfolios(
+            prices=portfolio_df, 
+            in_window=14, 
+            prediction_window=7, 
+            portfolio_type='max_return'
+        )
+
+        rp_max_sharpe = RollingPortfolios(
+            prices=portfolio_df, 
+            in_window=14, 
+            prediction_window=7, 
+            portfolio_type='max_sharpe'
+        )
+
+        rp_min_volatility = RollingPortfolios(
+            prices=portfolio_df, 
+            in_window=14, 
+            prediction_window=7, 
+            portfolio_type='min_volatility'
+        )
+        rp_max_return_benchmark     = ((rp_max_return.weights * portfolio_returns_df).sum(axis=1) + 1).cumprod()
+        rp_max_sharpe_benchmark     = ((rp_max_sharpe.weights * portfolio_returns_df).sum(axis=1) + 1).cumprod()
+        rp_min_volatility_benchmark = ((rp_min_volatility.weights * portfolio_returns_df).sum(axis=1) + 1).cumprod()
+
+        rp_max_return_benchmark     = rp_max_return_benchmark[benchmark_start:df_end]
+        rp_max_sharpe_benchmark     = rp_max_sharpe_benchmark[benchmark_start:df_end]
+        rp_min_volatility_benchmark = rp_min_volatility_benchmark[benchmark_start:df_end]
+
+        return rp_max_return_benchmark, rp_max_sharpe_benchmark, rp_min_volatility_benchmark
+
+    # 17 for 7etf, 15 for 2etf
+    def _load_benchmark(self, portfolio_df, df_start='2019-01-15', df_end='2020-02-01', benchmark_start="2019-02-01"):
+        self._benchmark_max_return, self._benchmark_max_sharpe, self._benchmark_min_volatility = \
+            self._run_benchmarks(portfolio_df, df_start, df_end, benchmark_start)
 
     def _initialize_linear_parameters(self):
         """
@@ -976,7 +1074,7 @@ class LinearAgent(AgentDataBase):
                 action_date=start_date
 
             returns_dates.append(action_date)
-            action_date,flat_state,one_period_effective_return,action_portfolio_weights =self._get_sars_by_date(action_date=action_date,verbose=False)
+            action_date,flat_state,one_period_effective_return,action_portfolio_weights, reward_R, reward_vol = self._get_sars_by_date(action_date=action_date,verbose=False)
             actions.append(action_portfolio_weights)
             states.append(flat_state.values)
 
@@ -989,19 +1087,157 @@ class LinearAgent(AgentDataBase):
 
         return states,actions,pd.concat(period_returns, axis=0)
 
+    def plot_backtest(self, backtest, backtest_plot_title, backtest_save_path):
+        n_cols = len(backtest.columns)
+        plt.figure(figsize=(12, 6))
+        for col_counter, col in enumerate(backtest):
+            col_return = round((backtest[col][-1] - 1) * 100, 2)
+            col_volatility = round(backtest[col].std() * 100, 2)
+            plt.plot(backtest[col], color="blue", alpha=(col_counter + 1) / n_cols, 
+            label="Epoch: {}, Return: {}%, Volatility: {}%".format(str(col), str(col_return), str(col_volatility)))
 
-    def ACTOR_CRITIC_FIT(self, alpha=.01, gamma=.99, theta_threshold=.001, max_iterations=10000, plot_gradients=False, plot_every=2000
-                      , record_average_weights=True,  alpha_critic=.01,l_trace=.3,l_trace_critic=.3,use_traces=False, verbose=True):
+        plt.plot(
+            self._benchmark_max_return, color="black", 
+            label="Real Dataset Benchmark - Max Return, Return: {}%, Volatility: {}%".format(
+            round((self._benchmark_max_return[-1] - 1) * 100, 2),
+            round(self._benchmark_max_return.std() * 100, 2)))    
+        plt.plot(self._benchmark_max_sharpe, color="orange",
+            label="Real Dataset Benchmark - Max Sharpe, Return: {}%, Volatility: {}%".format(
+                round((self._benchmark_max_sharpe[-1] - 1) * 100, 2),
+                round(self._benchmark_max_sharpe.std() * 100, 2)))
+        plt.plot(self._benchmark_min_volatility, color="green", 
+            label="Real Dataset Benchmark - Min Volatility, Return: {}%, Volatility: {}%".format(
+            round((self._benchmark_min_volatility[-1] - 1) * 100, 2),
+            round(self._benchmark_min_volatility.std() * 100, 2)))
+
+        plt.gcf().autofmt_xdate()
+        plt.legend(loc="upper left", fontsize=12)
+        plt.xlabel("Date", fontsize=self.label_size)
+        plt.ylabel("Backtest Returns", fontsize=self.label_size)
+        plt.xticks(fontsize=self.tick_size)
+        plt.yticks(fontsize=self.tick_size)
+        plt.title(backtest_plot_title, fontsize=self.title_size)
+        plt.savefig(backtest_save_path)
+        plt.show()
+        plt.close()
+
+    def plot_reward_components(self, n_iters, average_reward, average_reward_R, average_reward_vol, iters, reward_save_path):
+        fig, ax = plt.subplots(nrows=3, ncols=1, sharex=True, sharey=True)
+        fig.set_figheight(12)
+        fig.set_figwidth(12)
+        ax[0].plot(n_iters, average_reward, label=self.reward_function + " mean: {} vol: {}".format(
+            np.round(np.mean(average_reward), 2), np.round(np.std(average_reward), 2)))
+        ax[0].legend(loc="upper right", fontsize = self.legend_size)
+        ax[0].set_ylabel("Reward", fontsize=self.label_size)
+        ax[0].tick_params(axis='both', which='major', labelsize=self.tick_size)
+        ax[1].plot(n_iters, average_reward_R, color="green",
+                    label="Reward Component mean: {} vol: {}".format(
+                        np.round(np.mean(average_reward_R), 2), np.round(np.std(average_reward_R), 2)))
+        ax[1].legend(loc="upper right", fontsize = self.legend_size)
+        ax[1].set_ylabel("Reward", fontsize=self.label_size)
+        ax[1].tick_params(axis='both', which='major', labelsize=self.tick_size)
+        ax[2].plot(n_iters, average_reward_vol, color="red",
+                    label="Volatility Component mean: {} vol: {}".format(
+                        np.round(np.mean(average_reward_vol), 2),
+                        np.round(np.std(average_reward_vol), 2)))
+        ax[2].legend(loc="upper right", fontsize = self.legend_size)
+        ax[2].set_ylabel("Reward", fontsize=self.label_size)
+        ax[2].tick_params(axis='both', which='major', labelsize=self.tick_size)
+
+        if self.b_w_set == True:
+            plt.plot(n_iters, [self._benchmark_G for i in range(iters)])
+        plt.legend(loc="best", fontsize = self.legend_size)
+        plt.xlabel("Epochs", fontsize=self.label_size)
+        plt.xticks(fontsize=self.tick_size)
+        plt.yticks(fontsize=self.tick_size)
+        fig.suptitle("Reward Function and Components", fontsize=self.title_size)
+        fig.savefig(reward_save_path)
+        plt.show()
+        plt.close()
+
+    def plot_asset_weights(self, column_names, mu_chart, sigma_chart, colors, x_range, asset_weight_save_path):
+        for i in range(mu_chart.shape[1]):
+            if mu_chart.shape[1] == 7 or mu_chart.shape[1] == 2:
+                symbol = column_names
+            else:
+                symbol = range(mu_chart.shape[1])
+
+            tmp_mu_plot = mu_chart[:, i]
+            tmp_sigma_plot = sigma_chart[:, i]
+            s_plus = tmp_mu_plot + tmp_sigma_plot
+            s_minus = tmp_mu_plot - tmp_sigma_plot
+            plt.plot(mu_chart[:, i], label="Asset " + symbol[i], c=colors[i])
+            if mu_chart.shape[1] == 2:
+                plt.fill_between([i for i in range(s_plus.shape[0])], s_plus, s_minus, color=colors[i], alpha=.2)
+
+        if self.b_w_set==True:
+            ws = np.repeat(self._benchmark_weights.reshape(-1, 1), len(x_range), axis=1)
+            for row in range(ws.shape[0]):
+                plt.plot(x_range, ws[row, :], label="benchmark_return" + str(row))
+        plt.ylim(-0.1, 1.1)
+        plt.legend(loc="upper left", fontsize = self.legend_size)
+        plt.xticks(fontsize=self.tick_size)
+        plt.yticks(fontsize=self.tick_size)
+        plt.xlabel("Epochs", fontsize=self.label_size)
+        plt.ylabel("Asset Weights", fontsize=self.label_size)
+        plt.title("Asset Weights vs Epochs", fontsize=self.title_size)
+        plt.savefig(asset_weight_save_path)
+        plt.show()
+        plt.close()
+
+    def plot_gradients(self, tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path):
+        plt.figure(figsize=(12, 6))
+        # iterate backwards
+        for idx in range_iter:
+            plt.plot(tmp_mu_asset[:, idx], label="mu {}".format(feature_column_names[idx]))
+        plt.legend(loc="upper left", fontsize = self.legend_size)
+        plt.title(plot_title, fontsize=self.title_size)
+        plt.xticks(fontsize=self.tick_size)
+        plt.yticks(fontsize=self.tick_size)
+        plt.xlabel("Epochs", fontsize=self.label_size)
+        plt.ylabel("Gradient", fontsize=self.label_size)
+        plt.savefig(gradients_save_path)
+        plt.show()
+        plt.clf()
+        plt.close()
+
+
+
+    def ACTOR_CRITIC_FIT(self, alpha=.01, gamma=.99, theta_threshold=.001, max_iterations=10000, plot_gradients=True, plot_every=2000, detrend=False
+                      , record_average_weights=True, alpha_critic=.01,l_trace=.3,l_trace_critic=.3,use_traces=False, train_input = None, model_run=None, verbose=True):
         """
         performs the Actor-Critic Policy Gradient Model with option to add eligibility traces
         :return:
         """
+        if model_run == None:
+                raise Exception("Parameter Model Run Should Not Be None")
+
+        # create directory for models_info if it does not exist
+        models_info_dir = os.path.join(os.getcwd(), 'models_info') 
+        if not os.path.exists(models_info_dir):
+            os.mkdir(models_info_dir)
+            
+        # create directory for current model_run if it does not exist
+        self.model_run_dir = os.path.join(models_info_dir, model_run)
+        if not os.path.exists(self.model_run_dir):
+            os.mkdir(self.model_run_dir)
+
+        # create directory for current model if it does not exist
+        self.model_run_dir = os.path.join(self.model_run_dir, "Actor Critic{}".format(" with Eligibility Traces" if use_traces else ""))
+        if not os.path.exists(self.model_run_dir):
+            os.mkdir(self.model_run_dir)
+
+
         theta_diff = 1000
         observations = self.sample_observations
         iters = 0
         n_iters = []
         average_weights = []
         average_reward = []
+        average_reward_R=[]
+        average_reward_vol=[]
+        average_weighted_sum=[]
+        risk_aversion = self.environment.state.risk_aversion
         theta_norm = []
 
         pbar = tqdm(total=max_iterations)
@@ -1018,9 +1254,12 @@ class LinearAgent(AgentDataBase):
             n_iters.append(iters)
 
             # states,actions,period_returns=self.sample_env(observations=observations,verbose=False)
-            states, actions, rewards = self.sample_env_pre_sampled(verbose=False)
+            states, actions, rewards, rewards_R, rewards_vol = self.sample_env_pre_sampled(verbose=False)
 
             average_reward.append(np.mean(rewards))
+            average_reward_R.append(np.mean(rewards_R))
+            average_reward_vol.append(np.mean(rewards_vol))
+            average_weighted_sum.append(np.sum([risk_aversion*np.mean(rewards_R),(1-risk_aversion)*np.mean(rewards_vol)]))
             new_theta_mu = copy.deepcopy(self.theta_mu)
             new_theta_sigma = copy.deepcopy(self.theta_sigma)
 
@@ -1033,6 +1272,7 @@ class LinearAgent(AgentDataBase):
             z_theta_mu=np.zeros(self.theta_mu.shape)
             z_theta_sigma=np.zeros(self.theta_sigma.shape)
             I=1
+
             for t in range(observations):
                 action_t = actions[t]
                 flat_state_t = states[t]
@@ -1070,13 +1310,13 @@ class LinearAgent(AgentDataBase):
                     new_theta_mu = new_theta_mu + alpha * delta * (gamma ** t) * theta_mu_log_gradient
                     new_theta_sigma = new_theta_sigma + alpha * delta * (gamma ** t) * theta_sigma_log_gradient
 
-                # save values for plotting
-                mu_deterministic.append(self._mu_linear(flat_state=flat_state_t))
-                sigma_deterministic.append(self._sigma_linear(flat_state=flat_state_t))
-                V.append(self._state_linear(flat_state_t))
+            # save values for plotting
+            mu_deterministic.append(self._mu_linear(flat_state=flat_state_t))
+            sigma_deterministic.append(self._sigma_linear(flat_state=flat_state_t))
+            V.append(self._state_linear(flat_state_t))
 
-                tmp_mu_gradient.append(theta_mu_log_gradient)
-                tmp_sigma_gradient.append(theta_sigma_log_gradient)
+            tmp_mu_gradient.append(theta_mu_log_gradient)
+            tmp_sigma_gradient.append(theta_sigma_log_gradient)
 
             theta_mu_hist_gradients.append(np.array(tmp_mu_gradient).mean(axis=1))
             theta_sigma_hist_gradients.append(np.array(tmp_sigma_gradient).mean(axis=1))
@@ -1088,6 +1328,7 @@ class LinearAgent(AgentDataBase):
             theta_diff = np.linalg.norm(new_full_theta - old_full_theta)
             theta_norm.append(theta_diff)
             # print("iteration", iters,theta_diff, end="\r", flush=True)
+
             pbar.update(1)
             # assign  update_of thetas
             self.theta_mu = copy.deepcopy(new_theta_mu)
@@ -1101,71 +1342,135 @@ class LinearAgent(AgentDataBase):
                     # Create Plot Backtest
                     if not "backtest" in locals():
                         backtest=None
-                    backtest=self.backtest_policy(epoch=iters,backtest=backtest)
-                    n_cols=len(backtest.columns)
-                    for col_counter,col in enumerate(backtest):
-                        plt.plot(backtest[col],color="blue",alpha=(col_counter+1)/n_cols)
-                        plt.show()
-                        plt.close()
-                        # Backtest plot finishes
+                    backtest, tmp_weights =self.backtest_policy(epoch=iters,backtest=backtest, train_input=train_input)
+                    
+                    backtest_plot_title = "Backtest Returns vs Epoch Training - {} - Actor Critic{}".format(model_run, " with Eligibility Traces" if use_traces else "")
+                    backtest_save_path = "{}/{}_training_backtest_actor_critic{}.png".format(self.model_run_dir, model_run, "_with_eligibility_traces" if use_traces else "")
+                    self.plot_backtest(backtest, backtest_plot_title, backtest_save_path)
 
-                    plt.plot(n_iters, average_reward, label=self.reward_function)
-                    if self.b_w_set == True:
-                        plt.plot(n_iters, [self._benchmark_G for i in range(iters)])
-                    plt.legend(loc="best")
-                    plt.xlabel("Epochs")
-                    plt.ylabel("Reward")
-                    plt.show()
+                    # # Backtest plot finishes
+                    # backtest.to_csv('temp_persisted_data/' + model_run + '_training_backtest_actor_critic_traces'+ str(use_traces)+'.csv')
 
-                    plt.figure(figsize=(8,4))
+                    # Plot reward components
+                    reward_save_path = "{}/{}_reward_actor_critic{}.png".format(self.model_run_dir, model_run, "_with_eligibility_traces" if use_traces else "")
+                    self.plot_reward_components(n_iters, average_reward, average_reward_R, average_reward_vol, iters, reward_save_path)
+
+                    plt.figure(figsize=(12,6))
                     mu_chart = np.array(mu_deterministic)
                     sigma_chart = np.array(sigma_deterministic)
                     x_range = [round(i/observations,2) for i in range(mu_chart.shape[0])]
-                    ticker=["EEMV", "EFAV","MTUM","QUAL","SIZE","USMV","VLUE"]
+
                     cmap = plt.get_cmap('jet')
                     colors = cmap(np.linspace(0, 1.0, mu_chart.shape[1]))
-                    for i in range(mu_chart.shape[1]):
-                        tmp_mu_plot = mu_chart[:, i]
-                        tmp_sigma_plot = sigma_chart[:, i]
-                        s_plus = tmp_mu_plot + tmp_sigma_plot
-                        s_minus = tmp_mu_plot - tmp_sigma_plot
-                        plt.plot(x_range,mu_chart[:, i], label="Asset " + ticker[i], c=colors[i])
-                        # plt.fill_between(x_range, s_plus, s_minus, color=colors[i], alpha=.2)
 
-                    if self.b_w_set == True:
-                        ws = np.repeat(self._benchmark_weights.reshape(-1, 1), len(x_range), axis=1)
-                        for row in range(ws.shape[0]):
-                            plt.plot(x_range, ws[row, :], label="benchmark_return" + str(row))
-                    plt.ylim(0, 1)
-                    plt.legend(loc="upper left")
-                    plt.xlabel("Epochs")
-                    plt.ylabel("Asset Weights")
-                    plt.show()
-                    plt.plot(V,label="Value Function")
-                    plt.show()
-                    plt.close()
+                    column_names = list(train_input.columns)
+                    column_names = list(map(lambda x: x if x != 'simulated_asset' else 'Simulated Asset', column_names))
+
+                    # Plot Asset Weights
+                    asset_weight_save_path = "{}/{}_asset_weights_actor_critic{}.png".format(self.model_run_dir, model_run, "_with_eligibility_traces" if use_traces else "")
+                    self.plot_asset_weights(column_names, mu_chart, sigma_chart, colors, x_range, asset_weight_save_path)
+
 
                     if plot_gradients == True:
-                        for asset in range(self.number_of_assets):
-                            tmp_mu_asset = np.array([i[0, :] for i in theta_mu_hist_gradients])
-                            plt.plot(tmp_mu_asset, label=str(asset) + "mu")
-                            plt.show()
+                        plt.figure(figsize=(12, 6))
+                        tmp_mu_asset = np.array([i[0, :] for i in theta_mu_hist_gradients])
+
+                        # # save gradients to file
+                        # tmp_mu_asset_save_path = 'temp_persisted_data/' + model_run + '_mu_gradients_actor_critic_' + str(use_traces) + '.npy'
+                        # np.save(tmp_mu_asset_save_path, tmp_mu_asset)
+
+                        feature_column_names = list(self.environment.features.columns)
+                        feature_column_names = [_.replace(".parquet", "") for _ in feature_column_names]
+                        feature_column_names = [_.replace("trend_coef", "trend") for _ in feature_column_names]
+                        feature_column_names = [_.replace("_hw", "") for _ in feature_column_names]
+
+                        cmap = plt.get_cmap('jet')
+                        colors = cmap(np.linspace(0, 1, 9))
+
+                        # plot log returns
+                        range_iter = range(mu_chart.shape[1] - 1, -1, -1)
+                        plot_title = "Gradients - Log Returns"
+                        gradients_save_path = "{}/{}_gradients_log_returns_actor_critic{}.png".format(
+                            self.model_run_dir, model_run, "_with_eligibility_traces" if use_traces else "")
+                        self.plot_gradients(tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path)
+
+                        # plot volatility
+                        range_iter = range(len(feature_column_names) - 2 - mu_chart.shape[1] * 6, 
+                                        len(feature_column_names) - 2 - mu_chart.shape[1]  * 11, - 5)
+                        plot_title = "Gradients - Volatility"
+                        gradients_save_path = "{}/{}_gradients_volatility_actor_critic{}.png".format(
+                            self.model_run_dir, model_run, "_with_eligibility_traces" if use_traces else "")
+                        self.plot_gradients(tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path)
+
+                        # plot demeaned return
+                        range_iter = range(len(feature_column_names) - 3 - mu_chart.shape[1] * 6,
+                                        len(feature_column_names) - 3 - mu_chart.shape[1]  * 11, - 5)
+                        plot_title = "Gradients - Demeaned Return"
+                        gradients_save_path = "{}/{}_gradients_demeaned_returns_actor_critic{}.png".format(
+                            self.model_run_dir, model_run, "_with_eligibility_traces" if use_traces else "")
+                        self.plot_gradients(tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path)
+
+                        # plot residuals
+                        range_iter = range(len(feature_column_names) - 4 - mu_chart.shape[1] * 6,
+                                        len(feature_column_names) - 4 - mu_chart.shape[1]  * 11, - 5)
+                        plot_title = "Gradients - Residuals"
+                        gradients_save_path = "{}/{}_gradients_residuals_actor_critic{}.png".format(
+                            self.model_run_dir, model_run, "_with_eligibility_traces" if use_traces else "")
+                        self.plot_gradients(tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path)
+
+                        # plot level
+                        range_iter = range(len(feature_column_names) - 5 - mu_chart.shape[1] * 6,
+                                        len(feature_column_names) - 5 - mu_chart.shape[1]  * 11, - 5)
+                        plot_title = "Gradients - Level"
+                        gradients_save_path = "{}/{}_gradients_level_actor_critic{}.png".format(
+                            self.model_run_dir, model_run, "_with_eligibility_traces" if use_traces else "")
+                        self.plot_gradients(tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path)
+
+                        # plot trend
+                        range_iter = range(len(feature_column_names) - 6 - mu_chart.shape[1] * 6,
+                                        len(feature_column_names) - 6 - mu_chart.shape[1]  * 11, - 5)
+                        plot_title = "Gradients - Trend"
+                        gradients_save_path = "{}/{}_gradients_trend_actor_critic{}.png".format(
+                            self.model_run_dir, model_run, "_with_eligibility_traces" if use_traces else "")
+                        self.plot_gradients(tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path)
 
         return average_weights
 
 
-    def REINFORCE_fit(self,alpha=.01,gamma=.99,theta_threshold=.001,max_iterations=10000, plot_gradients=False, plot_every=2000
-                             ,record_average_weights=True,add_baseline=False,alpha_baseline=.01, verbose=True):
+    def REINFORCE_fit(self,alpha=.01,gamma=.99,theta_threshold=.001,max_iterations=10000, plot_gradients=True, plot_every=2000, detrend=False
+                             ,record_average_weights=True,add_baseline=False,alpha_baseline=.01, train_input = None, model_run=None, verbose=True):
         """
         performs the REINFORCE Policy Gradient Method with option to run the REINFORCE with baseline Policy Gradient Method
         :return:
         """
+        if model_run == None:
+            raise Exception("Parameter Model Run Should Not Be None")
+
+        # create directory for models_info if it does not exist
+        models_info_dir = os.path.join(os.getcwd(), 'models_info') 
+        if not os.path.exists(models_info_dir):
+            os.mkdir(models_info_dir)
+            
+        # create directory for current model_run if it does not exist
+        self.model_run_dir = os.path.join(models_info_dir, model_run)
+        if not os.path.exists(self.model_run_dir):
+            os.mkdir(self.model_run_dir)
+
+        # create directory for current model if it does not exist
+        self.model_run_dir = os.path.join(self.model_run_dir, "REINFORCE{}".format(" with Baseline" if add_baseline else ""))
+        if not os.path.exists(self.model_run_dir):
+            os.mkdir(self.model_run_dir)
+
         theta_diff=1000
         observations=self.sample_observations
         iters=0
         n_iters=[]
         average_weights=[]
         average_reward=[]
+        average_reward_R=[]
+        average_reward_vol=[]
+        average_weighted_sum=[]
+        risk_aversion = self.environment.state.risk_aversion
         theta_norm=[]
 
         pbar = tqdm(total=max_iterations)
@@ -1180,21 +1485,23 @@ class LinearAgent(AgentDataBase):
             n_iters.append(iters)
 
             # states,actions,period_returns=self.sample_env(observations=observations,verbose=False)
-            states, actions, rewards = self.sample_env_pre_sampled(verbose=False)
+            states, actions, rewards, rewards_R, rewards_vol = self.sample_env_pre_sampled(verbose=False)
 
             average_reward.append(np.mean(rewards))
+            average_reward_R.append(np.mean(rewards_R))
+            average_reward_vol.append(np.mean(rewards_vol))
+            average_weighted_sum.append(np.sum([risk_aversion*np.mean(rewards_R),(1-risk_aversion)*np.mean(rewards_vol)]))
             new_theta_mu=copy.deepcopy(self.theta_mu)
             new_theta_sigma=copy.deepcopy(self.theta_sigma)
 
             tmp_mu_gradient=[]
             tmp_sigma_gradient=[]
+
             for t in range(observations):
                 action_t=actions[t]
                 flat_state_t=states[t]
 
                 gamma_coef=np.array([gamma**(k-t) for k in range(t,observations)])
-
-
                 G=np.sum(rewards[t:]*gamma_coef)
 
                 if add_baseline==True:
@@ -1238,48 +1545,97 @@ class LinearAgent(AgentDataBase):
             if record_average_weights==True:
                 if iters%plot_every==0:
                     if verbose:
-                        plt.figure(figsize=(8, 4))
-                        plt.plot(n_iters, average_reward, label=self.reward_function)
-                        if self.b_w_set == True:
-                            plt.plot(n_iters, [self._benchmark_G for i in range(iters)])
-                        plt.legend(loc="best")
-                        plt.xlabel("Epochs")
-                        plt.ylabel("Reward")
-                        plt.show()
+                        # Create Plot Backtest
+                        if not "backtest" in locals():
+                            backtest = None
+                        backtest, tmp_weights = self.backtest_policy(epoch=iters, backtest=backtest, train_input=train_input)
 
-                        plt.figure(figsize=(8, 4))
+                        backtest_plot_title = "Backtest Returns vs Epoch Training - {} - REINFORCE{}".format(model_run, " with Baseline" if add_baseline else "")
+                        backtest_save_path = "{}/{}_training_backtest_reinforce{}.png".format(self.model_run_dir, model_run, "_with_baseline" if add_baseline else "")
+                        self.plot_backtest(backtest, backtest_plot_title, backtest_save_path)
+
+                        # # Backtest plot finishes
+                        # backtest.to_csv('temp_persisted_data/' + model_run + '_training_backtest_reinforce_baseline_' + str(add_baseline) + '.csv')
+
+                        # Plot reward components
+                        reward_save_path = "{}/{}_reward_reinforce{}.png".format(self.model_run_dir, model_run, "_with_baseline" if add_baseline else "")
+                        self.plot_reward_components(n_iters, average_reward, average_reward_R, average_reward_vol, iters, reward_save_path)
+    
+                        plt.figure(figsize=(12, 6))
                         mu_chart = np.array(mu_deterministic)
                         sigma_chart = np.array(sigma_deterministic)
                         x_range = [round(i / observations, 2) for i in range(mu_chart.shape[0])]
-                        ticker = ["EEMV", "EFAV", "MTUM", "QUAL", "SIZE", "USMV", "VLUE"]
+
                         cmap = plt.get_cmap('jet')
                         colors = cmap(np.linspace(0, 1.0, mu_chart.shape[1]))
-                        for i in range(mu_chart.shape[1]):
-                            tmp_mu_plot = mu_chart[:, i]
-                            tmp_sigma_plot = sigma_chart[:, i]
-                            s_plus = tmp_mu_plot + tmp_sigma_plot
-                            s_minus = tmp_mu_plot - tmp_sigma_plot
-                            plt.plot(mu_chart[:, i], label="Asset " + ticker[i], c=colors[i])
-                            # plt.fill_between([i for i in range(s_plus.shape[0])], s_plus, s_minus, color=colors[i], alpha=.2)
 
-                        if  self.b_w_set==True:
-                            ws = np.repeat(self._benchmark_weights.reshape(-1, 1), len(x_range), axis=1)
-                            for row in range(ws.shape[0]):
-                                plt.plot(x_range, ws[row, :], label="benchmark_return" + str(row))
-                        plt.ylim(0, 1)
-                        plt.legend(loc="upper left")
-                        plt.xlabel("Epochs")
-                        plt.ylabel("Asset Weights")
-                        plt.show()
-                        plt.close()
+                        column_names = list(train_input.columns)
+                        column_names = list(map(lambda x: x if x != 'simulated_asset' else 'Simulated Asset', column_names))
+                        
+                        # Plot Asset Weights
+                        asset_weight_save_path = "{}/{}_asset_weights_reinforce{}.png".format(self.model_run_dir, model_run, "_with_baseline" if add_baseline else "")
+                        self.plot_asset_weights(column_names, mu_chart, sigma_chart, colors, x_range, asset_weight_save_path)
+    
+                        if plot_gradients == True:
+                            tmp_mu_asset = np.array([i[0, :] for i in theta_mu_hist_gradients])
 
-                        if plot_gradients==True:
+                            # # save gradients to file
+                            # tmp_mu_asset_save_path = 'temp_persisted_data/' + model_run + '_mu_gradients_reinforce_baseline_' + str(add_baseline) + '.npy'
+                            # np.save(tmp_mu_asset_save_path, tmp_mu_asset)
+                            
+                            feature_column_names = list(self.environment.features.columns)
+                            feature_column_names = [_.replace(".parquet", "") for _ in feature_column_names]
+                            feature_column_names = [_.replace("trend_coef", "trend") for _ in feature_column_names]
+                            feature_column_names = [_.replace("_hw", "") for _ in feature_column_names]
 
-                            for asset in range(self.number_of_assets):
-                                tmp_mu_asset=np.array([i[0,:] for i in theta_mu_hist_gradients])
-                                plt.plot(tmp_mu_asset,label=str(asset)+"mu")
-                                plt.show()
-                                plt.close()
+                            cmap = plt.get_cmap('jet')
+                            colors = cmap(np.linspace(0, 1, 9))
+
+                            # plot log returns
+                            range_iter = range(mu_chart.shape[1] - 1, -1, -1)
+                            plot_title = "Gradients - Log Returns"
+                            gradients_save_path = "{}/{}_gradients_log_returns_reinforce{}.png".format(self.model_run_dir, model_run, "_with_baseline" if add_baseline else "")
+                            self.plot_gradients(tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path)
+
+                            # plot volatility
+                            range_iter = range(len(feature_column_names) - 2 - mu_chart.shape[1] * 6, 
+                                            len(feature_column_names) - 2 - mu_chart.shape[1]  * 11, - 5)
+                            plot_title = "Gradients - Volatility"
+                            gradients_save_path = "{}/{}_gradients_volatility_reinforce{}.png".format(
+                                self.model_run_dir, model_run, "_with_baseline" if add_baseline else "")
+                            self.plot_gradients(tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path)
+
+                            # plot demeaned return
+                            range_iter = range(len(feature_column_names) - 3 - mu_chart.shape[1] * 6,
+                                            len(feature_column_names) - 3 - mu_chart.shape[1]  * 11, - 5)
+                            plot_title = "Gradients - Demeaned Return"
+                            gradients_save_path = "{}/{}_gradients_demeaned_returns_reinforce{}.png".format(
+                                self.model_run_dir, model_run, "_with_baseline" if add_baseline else "")
+                            self.plot_gradients(tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path)
+
+                            # plot residuals
+                            range_iter = range(len(feature_column_names) - 4 - mu_chart.shape[1] * 6,
+                                            len(feature_column_names) - 4 - mu_chart.shape[1]  * 11, - 5)
+                            plot_title = "Gradients - Residuals"
+                            gradients_save_path = "{}/{}_gradients_residuals_reinforce{}.png".format(
+                                self.model_run_dir, model_run, "_with_baseline" if add_baseline else "")
+                            self.plot_gradients(tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path)
+
+                            # plot level
+                            range_iter = range(len(feature_column_names) - 5 - mu_chart.shape[1] * 6,
+                                            len(feature_column_names) - 5 - mu_chart.shape[1]  * 11, - 5)
+                            plot_title = "Gradients - Level"
+                            gradients_save_path = "{}/{}_gradients_level_reinforce{}.png".format(
+                                self.model_run_dir, model_run, "_with_baseline" if add_baseline else "")
+                            self.plot_gradients(tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path)
+
+                            # plot trend
+                            range_iter = range(len(feature_column_names) - 6 - mu_chart.shape[1] * 6,
+                                            len(feature_column_names) - 6 - mu_chart.shape[1]  * 11, - 5)
+                            plot_title = "Gradients - Trend"
+                            gradients_save_path = "{}/{}_gradients_trend_reinforce{}.png".format(
+                                self.model_run_dir, model_run, "_with_baseline" if add_baseline else "")
+                            self.plot_gradients(tmp_mu_asset, range_iter, feature_column_names, plot_title, gradients_save_path)
 
         return average_weights
 
@@ -1424,7 +1780,7 @@ class DeepAgentPytorch(AgentDataBase):
         self.actor_model=PolicyEstimator(state_dimension=self.state_dimension,number_of_assets=self.number_of_assets)
         self.critic_model=ActorEstimator(state_dimension=self.state_dimension,number_of_assets=self.number_of_assets)
 
-    def ACTOR_CRITIC_fit(self,gamma=.99, max_iterations=10000,record_average_weights=True, verbose=True):
+    def ACTOR_CRITIC_fit(self,gamma=.99, max_iterations=10000,record_average_weights=True, train_input=None, verbose=True):
         """
         performs the Actor-Critic Policy Gradient Model with option to add eligibility traces in PyTorch
         :return:
@@ -1435,6 +1791,10 @@ class DeepAgentPytorch(AgentDataBase):
         average_weights = []
         average_reward = []
         total_reward = []
+        average_reward_R=[]
+        average_reward_vol=[]
+        average_weighted_sum=[]
+        risk_aversion = self.environment.state.risk_aversion
         theta_norm = []
         losses = []
         pbar = tqdm(total=max_iterations)
@@ -1449,9 +1809,12 @@ class DeepAgentPytorch(AgentDataBase):
         V=[]
         while iters < max_iterations:
             n_iters.append(iters)
-            states, actions, rewards = self.sample_env_pre_sampled(verbose=False)
+            states, actions, rewards, rewards_R, rewards_vol = self.sample_env_pre_sampled(verbose=False)
             states = np.array([s.values for s in states]).reshape(self.sample_observations, -1)
             average_reward.append(np.mean(rewards))
+            average_reward_R.append(np.mean(rewards_R))
+            average_reward_vol.append(np.mean(rewards_vol))
+            average_weighted_sum.append(np.sum([risk_aversion*np.mean(rewards_R),(1-risk_aversion)*np.mean(rewards_vol)]))
             actions = np.array(actions)
             advantages=[]
             states_tensor = torch.FloatTensor(states)
@@ -1501,20 +1864,46 @@ class DeepAgentPytorch(AgentDataBase):
             if record_average_weights == True:
                 if iters % 200 == 0:
                     if verbose:
+                        # Create Plot Backtest
+                        if not "backtest" in locals():
+                            backtest = None
+                        backtest, tmp_weights, input_returns = self.backtest_policy(epoch=iters, backtest=backtest, train_input=train_input)
+                        n_cols = len(backtest.columns)
+
+                        for col_counter, col in enumerate(backtest):
+                            plt.plot(backtest[col], color="blue", alpha=(col_counter + 1) / n_cols, label="epoch"+str(col))
+                            
+                        plt.gcf().autofmt_xdate()
+                        plt.xlabel("Date")
+                        plt.ylabel("Backtest Return")
+                        plt.legend(loc="upper left")
+                        plt.show()
+                        plt.close()
+                        # Backtest plot finishes
+
                         mu_chart = np.array(mus_deterministic)
                         sigma_chart=np.array(sigma_deterministc)
                         x_range=range(mu_chart.shape[0])
-                        ticker = ["EEMV", "EFAV", "MTUM", "QUAL", "SIZE", "USMV", "VLUE"]
+
                         cmap = plt.get_cmap('jet')
                         colors = cmap(np.linspace(0, 1.0, mu_chart.shape[1]))
-                        plt.figure(figsize=(8, 4))
+
+                        column_names = list(train_input.columns)
+                        column_names = list(map(lambda x: x if x != 'simulated_asset' else 'Simulated Asset', column_names))
                         for i in range(mu_chart.shape[1]):
-                            tmp_mu_plot=mu_chart[:,i]
-                            tmp_sigma_plot=sigma_chart[:,i]
-                            s_plus=tmp_mu_plot+tmp_sigma_plot
-                            s_minus = tmp_mu_plot -tmp_sigma_plot
-                            plt.plot(mu_chart[:,i],label="Asset "+ ticker[i],c=colors[i])
-                            # plt.fill_between(x_range,s_plus,s_minus,color=colors[i],alpha=.2)
+                            if mu_chart.shape[1] == 7 or mu_chart.shape[1] == 2:
+                                symbol = column_names
+                            else:
+                                symbol = range(mu_chart.shape[1])
+
+                            tmp_mu_plot = mu_chart[:, i]
+                            tmp_sigma_plot = sigma_chart[:, i]
+                            s_plus = tmp_mu_plot + tmp_sigma_plot
+                            s_minus = tmp_mu_plot - tmp_sigma_plot
+                            plt.plot(mu_chart[:, i], label="Asset " + symbol[i], c=colors[i])
+                            if mu_chart.shape[1] == 2:
+                                plt.fill_between([i for i in range(s_plus.shape[0])], s_plus, s_minus, color=colors[i],
+                                             alpha=.2)
 
                         ws = np.repeat(self._benchmark_weights.reshape(-1, 1), len(x_range), axis=1)
                         for row in range(ws.shape[0]):
@@ -1524,7 +1913,32 @@ class DeepAgentPytorch(AgentDataBase):
                         plt.show()
                         plt.close()
 
-                    plt.plot(n_iters, average_reward, label=self.reward_function)
+                    fig, ax = plt.subplots(nrows=4, ncols=1, sharex=True, sharey=True)
+                    fig.set_figheight(12)
+                    fig.set_figwidth(12)
+                    ax[0].plot(n_iters, average_reward, label=self.reward_function+" mean: {} vol: {}".format(np.round(np.mean(average_reward), 2), np.round(np.std(average_reward), 2)))
+                    ax[0].legend(loc="upper right")
+                    ax[0].set_ylabel("Reward")
+                    ax[1].plot(n_iters, average_reward_R, color="green", label="Reward Component mean: {} vol: {}".format(np.round(np.mean(average_reward_R), 2), np.round(np.std(average_reward_R), 2)))
+                    ax[1].legend(loc="upper right")
+                    ax[1].set_ylabel("Reward")
+                    ax[2].plot(n_iters, average_reward_vol, color="red", label="Volatility Component mean: {} vol: {}".format(np.round(np.mean(average_reward_vol), 2), np.round(np.std(average_reward_vol), 2)))
+                    ax[2].legend(loc="upper right")
+                    ax[2].set_ylabel("Reward")
+                    ax[3].plot(n_iters, average_weighted_sum, color="black", label="Weighted Sum mean: {} vol: {}".format(np.round(np.mean(average_weighted_sum), 2), np.round(np.std(average_weighted_sum), 2)))
+                    ax[3].legend(loc="upper right")
+                    ax[3].set_ylabel("Reward")
+
+                    if self.b_w_set == True:
+                        plt.plot(n_iters, [self._benchmark_G for i in range(iters)])
+                    plt.legend(loc="best")
+                    plt.xlabel("Epochs")
+                    fig.suptitle("Reward Function and Components", fontsize=16)
+                    fig.savefig('temp_persisted_data/' + model_run + '_reward_actor_crtic_' +
+                                str(use_traces) + '.png')
+                    plt.show()
+                    plt.close()
+
                     plt.plot(n_iters, [self._benchmark_G for i in range(iters)])
                     plt.legend(loc="best")
                     plt.show()
@@ -1558,10 +1972,11 @@ class DeepAgentPytorch(AgentDataBase):
             n_iters.append(iters)
 
             # states,actions,period_returns=self.sample_env(observations=observations,verbose=False)
-            states, actions, rewards = self.sample_env_pre_sampled(verbose=False)
+            states, actions, rewards, rewards_R, rewards_vol = self.sample_env_pre_sampled(verbose=False)
             states=np.array([s.values for s in states]).reshape(self.sample_observations,-1)
             average_reward.append(np.mean(rewards))
             # total_reward.extend(rewards)
+
             actions=np.array(actions)
             Gs=[]
 
